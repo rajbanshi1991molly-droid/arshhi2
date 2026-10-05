@@ -1,13 +1,10 @@
 // api/_lib.js
-
 function userOk(username) {
-  // Replace 'admin' with your desired username if you want
   return username === 'admin'; 
 }
 
 async function passwordOk(typedPassword) {
-  // REPLACE 'yourSecretPassword123' WITH THE EXACT PASSWORD YOU WANT TO USE
-  const correctPassword = '12345678';
+  const correctPassword = process.env.ADMIN_PASSWORD || 'yourSecretPassword123';
   return typedPassword === correctPassword;
 }
 
