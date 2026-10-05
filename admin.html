@@ -83,15 +83,17 @@ $('fg').addEventListener('click',function(){say('To reset the password, follow t
 function leave(){try{sessionStorage.removeItem(SK)}catch(e){}location.reload()}
 $('out').addEventListener('click',leave);
 try{var s=JSON.parse(sessionStorage.getItem(SK)||'null');if(s&&s.x>Date.now()){sess=s;enter()}}catch(e){}
+  function parseData(t){var d=t.match(/<script[^>]*id="data"[^>]*>([\s\S]*?)<\/script>/i);if(!d)throw 0;return JSON.parse(d[1].trim())}
 
-function parseData(t){var d=t.match(/<script id="data" type="application\/json">([\s\S]*?)<\/script>/);if(!d)throw 0;return JSON.parse(d[1])}
+
+
 async function enter(){
   $('login').style.display='none';$('panel').style.display='block';
   var e=$('ed');e.innerHTML='<p>Loading your website content…</p>';
   try{
     var r=await fetch('/api/content?fresh=1',{cache:'no-store'});
     if(r.ok){w=await r.json()}
-    else{var t=await (await fetch('index.html',{cache:'no-store'})).text();w=parseData(t)}
+    else{var t=await (await fetch('/',{cache:'no-store'})).text();w=parseData(t)}
     w.reviews=w.reviews||[];draw()
   }catch(x){e.innerHTML='';e.append(mk('p','msg','Could not load the website content. Keep index.html in the same folder as admin.html.'))}
 }
