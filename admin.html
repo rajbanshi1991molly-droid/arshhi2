@@ -43,7 +43,7 @@ input[type=text],input[type=email],input[type=password],textarea{width:100%;font
   <p class="s">Log in to edit the website.</p>
   <label class="f"><span>Username</span><input type="text" id="em" autocomplete="username" autocapitalize="none" spellcheck="false"></label>
   <label class="f"><span>Password</span><input type="password" id="pw" autocomplete="current-password"></label>
-  <button class="btn" id="go" type="button">Log in</button><button class="link" id="fg" type="button">Forgot password?</button>
+  
   <p class="msg" id="lm" role="alert"></p>
 </div></div>
 
@@ -82,7 +82,7 @@ async function login(){
 }
 $('go').addEventListener('click',login);
 ['em','pw'].forEach(function(i){$(i).addEventListener('keydown',function(e){if(e.key==='Enter')login()})});
-$('fg').addEventListener('click',function(){say('To reset the password, follow the "Forgot the password" steps in SETUP.md.',true)});
+
 function leave(){try{sessionStorage.removeItem(SK)}catch(e){}location.reload()}
 $('out').addEventListener('click',leave);
 try{var s=JSON.parse(sessionStorage.getItem(SK)||'null');if(s&&s.x>Date.now()){sess=s;enter()}}catch(e){}
