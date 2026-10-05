@@ -88,8 +88,8 @@ $('out').addEventListener('click',leave);
 try{var s=JSON.parse(sessionStorage.getItem(SK)||'null');if(s&&s.x>Date.now()){sess=s;enter()}}catch(e){}
 
 function parseData(t){
-  var d=t.match(/<script id="data" type="application\/json">([\s\S]*?)<\/script>/);
-  if(!d)throw 0;return JSON.parse(d[1])
+  var d=t.match(/<script[^>]*id="data"[^>]*>([\s\S]*?)<\/script>/i);
+  if(!d)throw 0;return JSON.parse(d[1].trim())
 }
 async function enter(){
   $('login').style.display='none';$('panel').style.display='block';
@@ -131,8 +131,8 @@ function pwField(label){var l=mk('label','f'),i=document.createElement('input');
 function draw(){
   var e=$('ed');e.innerHTML='';
   var g=group('Business');g.append(fld('Business name',w,'brand'),fld('Tagline (shown in footer)',w,'tagline'));e.append(g);
-  g=group('Logo');var pv=mk('img','logoprev');pv.src=w.logo || '';pv.alt='Current logo';var fi=document.createElement('input');fi.type='file';fi.accept='image/*';
-  fi.onchange=function(){var f=fi.files;if(!f || !f[0])return;var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){var k=Math.min(1,640/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);w.logo=c.toDataURL('image/webp',.88);pv.src=w.logo};im.src=r.result};r.readAsDataURL(f[0])};
+  g=group('Logo');var pv=mk('img','logoprev');pv.src=w.logo||'';pv.alt='Current logo';var fi=document.createElement('input');fi.type='file';fi.accept='image/*';
+  fi.onchange=function(){var f=fi.files;if(!f||!f[0])return;var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){var k=Math.min(1,640/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);w.logo=c.toDataURL('image/webp',.88);pv.src=w.logo};im.src=r.result};r.readAsDataURL(f[0])};
   g.append(pv,fi);e.append(g);
   g=group('Top section');g.append(fld('Headline',w,'headline'),fld('Description',w,'description','textarea'));e.append(g);
   e.append(listGroup('Services',w.services,[['Service title','name'],['Description','desc','textarea'],['Price details','price'],['Icon ID','icon']],{name:'',desc:'',price:'',icon:''},'Add service','Service'));
