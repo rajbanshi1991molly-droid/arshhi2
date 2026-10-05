@@ -1,17 +1,27 @@
-// api/content.js - PUBLIC, read-only. index.html and admin.html load the site data from here.
-const { redis, KEY_CONTENT, json } = require('./_lib');
+// api/content.js
+const { kv } = require('@vercel/kv');
+const { json } = require('./_lib');
 
-module.exports = async (req, res) => {
-  if (req.method !== 'GET') return json(res, 405, { error: 'method' });
-  if (!redis) return json(res, 500, { error: 'setup' });
+module.exports = async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   try {
-    let data = await redis.get(KEY_CONTENT);
-    if (typeof data === 'string') { try { data = JSON.parse(data); } catch (e) { data = null; } }
-    // Nothing saved yet: 404 so the pages keep using the data built into index.html
-    if (!data || typeof data !== 'object') return json(res, 404, { error: 'empty' });
-    json(res, 200, data);
-  } catch (e) {
-    console.error('content read failed:', e);
-    json(res, 500, { error: 'server' });
+    if (req.method === 'POST') {
+      await kv.set('arshhi_site_data', req.body);
+      return json(res, 200, { success: true });
+    }
+
+    if (req.method === 'GET') {
+      const storedData = await kv.get('arshhi_site_data');
+      return json(res, 200, storedData || {});
+    }
+  } catch (error) {
+    return json(res, 500, { error: error.message });
   }
 };
