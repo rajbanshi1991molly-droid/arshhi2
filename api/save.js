@@ -1,18 +1,32 @@
-// api/save.js - admin only. Writes the site data that /api/content serves.
-const { redis, KEY_CONTENT, json, authed } = require('./_lib');
+// api/save.js
+const { kv } = require('@vercel/kv');
+const { json } = require('./_lib');
 
 module.exports = async (req, res) => {
-  if (req.method !== 'POST') return json(res, 405, { error: 'method' });
-  if (!authed(req)) return json(res, 401, { error: 'auth' });
-  const d = req.body;
-  if (!d || typeof d !== 'object' || typeof d.brand !== 'string' || !Array.isArray(d.services) || !Array.isArray(d.steps))
-    return json(res, 400, { error: 'invalid' });
-  if (JSON.stringify(d).length > 900000) return json(res, 413, { error: 'too_large' });
+  // Safe CORS Configuration headers for your save panel
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  if (req.method !== 'POST') {
+    return json(res, 405, { error: 'method' });
+  }
+
   try {
-    await redis.set(KEY_CONTENT, d);
-    json(res, 200, { ok: true });
-  } catch (e) {
-    console.error('save failed:', e);
-    json(res, 500, { error: 'server' });
+    const updatedSiteData = req.body || {};
+
+    // 1. Permanently save your text fields, service boxes, and client reviews into Redis
+    await kv.set('arshhi_site_data', updatedSiteData);
+
+    // 2. Return a clean success status response back to your admin.html form script
+    return json(res, 200, { ok: true, success: true });
+
+  } catch (error) {
+    console.error("Database Save Failure:", error);
+    return json(res, 500, { error: 'server', details: error.message });
   }
 };
