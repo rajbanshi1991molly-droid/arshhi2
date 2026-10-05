@@ -151,7 +151,7 @@ return `<div class="topbar"><div class="wrap"><span>${when}</span><a href="${tel
 <dialog class="modal" id="fbModal" aria-labelledby="fbT"><button type="button" class="x" id="fbClose" aria-label="Close">&times;</button><h3 id="fbT">Share your feedback</h3><p>Tell us about your visit. Your message opens in WhatsApp and reaches us when you press send.</p><div class="rate" role="group" aria-label="Rating"><button type="button" aria-label="1 star" aria-pressed="false">★</button><button type="button" aria-label="2 stars" aria-pressed="false">★</button><button type="button" aria-label="3 stars" aria-pressed="false">★</button><button type="button" aria-label="4 stars" aria-pressed="false">★</button><button type="button" aria-label="5 stars" aria-pressed="false">★</button></div><label class="f"><span>Your name (optional)</span><input id="fbName" type="text" autocomplete="name"></label><label class="f"><span>Your feedback</span><textarea id="fbText" rows="4"></textarea></label><a class="btn main" id="fbSend" href="#" target="_blank" rel="noopener">Send on WhatsApp</a><span id="fbMsg" role="status"></span></dialog>
 `}
 
-var m,last,fb,rate=0,stars;
+var m,last,fb,rate=0, stars;
 root.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.svc');if(!b)return;var s=data.services[+b.dataset.i];last=b;
 $('mTitle').textContent=s.n;$('mDesc').textContent=s.d;var L=$('mList');L.innerHTML='';s.l.forEach(function(x){var li=document.createElement('li');li.textContent=x;L.appendChild(li)});
 $('mWa').href='https://wa.me/'+dg(data.phone)+'?text='+encodeURIComponent('Hello '+data.brand+', I would like to book: '+s.n);
