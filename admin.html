@@ -130,13 +130,63 @@ function fld(label,obj,key,mode){var x=mk('label','f'),el=document.createElement
   x.append(mk('span',null,label),el);return x}
 
 function group(t){var f=mk('fieldset');f.append(mk('legend',null,t));return f}
+  function listGroup(title,arr,fields,blank,addLabel,name){var fs=group(title);
+  function d(){fs.innerHTML='';fs.append(mk('legend',null,title));
+    arr.forEach(function(it,i){var box=mk('div','item');box.append(mk('b',null,name+' '+(i+1)));
+      fields.forEach(function(f){box.append(fld(f[0],it,f[1],f[2]))});
+      var rm=mk('button','sm','Remove this '+name.toLowerCase());rm.type='button';rm.onclick=function(){arr.splice(i,1);d()};box.append(rm);fs.append(box)});
+    var add=mk('button','sm',addLabel);add.type='button';add.style.marginTop='14px';add.onclick=function(){arr.push(JSON.parse(JSON.stringify(blank)));d()};fs.append(add)}
+  d();return fs}
+
 
 function draw(){
   var e=$('ed');e.innerHTML='';
+  
+  // 1. Business Info Panel
   var g=group('Business info');
-  g.append(fld('Business Name',w,'brand'), fld('Tagline',w,'tagline'));
+  g.append(fld('Business Name',w,'brand'), fld('Tagline (Footer Text)',w,'tagline'));
   e.append(g);
+
+  // 2. Interactive Logo Panel
+  g=group('Logo Image Settings');
+  var pv=mk('img','logoprev');pv.src=w.logo || '';pv.alt='Logo Preview';
+  var fi=document.createElement('input');fi.type='file';fi.accept='image/*';
+  fi.onchange=function(){
+    var f=fi.files[0];if(!f)return;
+    var r=new FileReader();
+    r.onload=function(){
+      var im=new Image();
+      im.onload=function(){
+        var k=Math.min(1,640/Math.max(im.width,im.height)),c=document.createElement('canvas');
+        c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);
+        c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+        w.logo=c.toDataURL('image/webp',.88);pv.src=w.logo
+      };im.src=r.result
+    };r.readAsDataURL(f)
+  };
+  g.append(pv,fi);e.append(g);
+
+  // 3. Main Headline Sections
+  g=group('Top Section / Hero');
+  g.append(fld('Main Title Headline',w,'headline'), fld('Subtitle Description',w,'description'));
+  e.append(g);
+
+  // 4. Dynamic Services Managed List
+  w.services = w.services || [];
+  e.append(listGroup('Beauty Care Services Offered', w.services, [
+    ['Service Title', 'name'],
+    ['Short Description', 'desc'],
+    ['Price Info', 'price']
+  ], {name:'', desc:'', price:''}, 'Add New Service Option', 'Service'));
+
+  // 5. Customer Reviews Managed List
+  w.reviews = w.reviews || [];
+  e.append(listGroup('Client Reviews & Testimonials', w.reviews, [
+    ['Client Name', 'author'],
+    ['Review Comment Text', 'text']
+  ], {author:'', text:''}, 'Add New Customer Review', 'Review'));
 }
+
 })();
 </script>
 </body>
