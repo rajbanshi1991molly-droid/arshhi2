@@ -1,14 +1,6 @@
 // api/login.js
-import { Redis } from '@upstash/redis';
-
-// Safe instantiation for Vercel Serverless environment
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN,
-});
-
-export default async function handler(req, res) {
-  // Direct CORS headers to ensure the static frontend can communicate cleanly
+module.exports = async (req, res) => {
+  // Allow your admin.html frontend to talk to this endpoint safely
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -18,30 +10,26 @@ export default async function handler(req, res) {
   }
 
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const { username, password } = req.body;
+    const b = req.body || {};
+    
+    // HARDCODE YOUR PASSWORD DIRECTLY HERE FOR A FOOLPROOF FIX
+    const correctUser = "admin";
+    const correctPassword = "yourSecretPassword123"; // <-- Type the exact password you want to use here!
 
-    if (!username || !password) {
-      return res.status(400).json({ error: 'Missing username or password' });
-    }
-
-    // Looks up the password string matching the user key in your Upstash database
-    const dbPassword = await redis.get(`user:${username}`);
-
-    if (dbPassword && dbPassword === password) {
-      return res.status(200).json({ 
-        success: true, 
-        message: 'Login successful',
-        token: 'auth_session_' + Buffer.from(username).toString('base64') 
+    if (b.username === correctUser && b.password === correctPassword) {
+      return res.status(200).json({
+        ok: true,
+        token: 'arshhi-secure-session-token',
+        expires: Date.now() + 3600000 // Valid for 1 hour
       });
     } else {
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+      return res.status(401).json({ error: 'wrong' });
     }
-
-  } catch (error) {
-    return res.status(500).json({ error: 'Database connection error', details: error.message });
+  } catch (e) {
+    return res.status(500).json({ error: 'Internal Server Error' });
   }
-}
+};
