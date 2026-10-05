@@ -1,13 +1,13 @@
 // api/_lib.js
 
 function userOk(username) {
-  // Checks if the typed username matches "admin"
+  // Replace 'admin' with your desired username if you want
   return username === 'admin'; 
 }
 
 async function passwordOk(typedPassword) {
-  // Directly reads the ADMIN_PASSWORD environment variable you set in Vercel!
-  const correctPassword = process.env.ADMIN_PASSWORD;
+  // REPLACE 'yourSecretPassword123' WITH THE EXACT PASSWORD YOU WANT TO USE
+  const correctPassword = '12345678';
   return typedPassword === correctPassword;
 }
 
