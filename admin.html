@@ -108,7 +108,7 @@ async function enter(){
     }
   } catch(x) {
     e.innerHTML = '';
-    e.append(mk('p','msg','Could not load content. Make sure api/content.js exists.'));
+    e.append(mk('p','msg','Could not load content. Check Vercel deployment logs.'));
   }
 }
 
@@ -119,7 +119,7 @@ async function saveAllData(){
   try {
     var res = await api('/api/content', w);
     if(res.success || res.status === 200){
-      $('sm').textContent = "Changes published live to arshhi.com!";
+      $('sm').textContent = "Changes published live successfully!";
       alert("Changes published live to arshhi.com successfully!");
     } else {
       $('sm').textContent = "Failed to save updates.";
@@ -150,13 +150,11 @@ function listGroup(title,arr,fields,blank,addLabel,name){
     arr.forEach(function(it,i){
       var box=mk('div','item');
       box.append(mk('b',null,name+' '+(i+1)));
-      fields.forEach(function(f){
-        var x=mk('label','f'),el=document.createElement(f[2]==='textarea'?'textarea':'input');
-        if(f[2]!=='textarea')el.type='text';
-        el.value=it[f[1]] || '';
-        el.addEventListener('input',function(){it[f[1]]=el.value});
-        x.append(mk('span',null,f[0]),el);
-        box.append(x);
+      fields.forEach(function(fInfo){
+        var fLabel = fInfo[0];
+        var fKey = fInfo[1];
+        var fMode = fInfo[2];
+        box.append(fld(fLabel, it, fKey, fMode));
       });
       var rm=mk('button','sm','Remove this '+name.toLowerCase());
       rm.type='button';rm.style.marginTop='6px';
