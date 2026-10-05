@@ -1,9 +1,8 @@
 {
-  "name": "arshhi-beauty-admin",
-  "version": "1.0.0",
-  "private": true,
-  "dependencies": {
-    "@vercel/global-config": "^1.0.0",
-    "@vercel/kv": "^1.0.1"
-  }
+  "version": 2,
+  "routes": [
+    { "src": "/api/login", "dest": "/api/login.js" },
+    { "src": "/api/content", "dest": "/api/content.js" },
+    { "src": "/(.*)", "dest": "/$1" }
+  ]
 }
