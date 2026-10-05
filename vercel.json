@@ -1,15 +1,7 @@
 {
   "version": 2,
   "cleanUrls": true,
-  "routes": [
-    { "src": "/api/login", "dest": "/api/login.js" },
-    { "src": "/api/content", "dest": "/api/content.js" },
-    { "src": "/admin", "dest": "/admin.html" },
-    { "src": "/(.*)", "dest": "/$1" }
-  ],
-  "functions": {
-    "api/*.js": {
-      "runtime": "nodejs18.x"
-    }
-  }
+  "rewrites": [
+    { "source": "/admin", "destination": "/admin.html" }
+  ]
 }
