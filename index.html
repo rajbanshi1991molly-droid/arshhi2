@@ -179,4 +179,15 @@ paint();
 fetch('/api/content',{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(nd){if(nd&&nd.brand&&Array.isArray(nd.services)&&JSON.stringify(nd)!==JSON.stringify(data)){nd.reviews=nd.reviews||[];data=nd;paint()}}).catch(function(){});
 if(cfg&&cfg.projectId&&cfg.apiKey&&!/^PASTE/.test(cfg.projectId+cfg.apiKey)){fetch('https://firestore.googleapis.com/v1/projects/'+cfg.projectId+'/databases/(default)/documents/site/content?key='+cfg.apiKey,{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(j){if(j&&j.fields&&j.fields.json){var nd=JSON.parse(j.fields.json.stringValue);if(JSON.stringify(nd)!==JSON.stringify(data)){data=nd;paint()}}}).catch(function(){})}
 })();
-</script></body></html>
+</script>
+  <!-- Data anchor for the Arshhi Admin panel layout -->
+<script id="data" type="application/json">
+{
+  "brand": "Arshhi",
+  "tagline": "Door-to-door beauty care",
+  "logo": "",
+  "reviews": []
+}
+</script>
+
+</body></html>
