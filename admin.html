@@ -28,11 +28,11 @@ input[type=text],input[type=email],input[type=password],textarea{width:100%;font
 .btn:disabled{opacity:.6;cursor:wait}
 .sm{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--blush);color:var(--ink);border-radius:8px;padding:8px 14px}
 .link{font:inherit;background:none;border:0;color:var(--bronze);text-decoration:underline;cursor:pointer;padding:0;margin-left:14px}
-.item{border-top:1px dashed var(--line);padding-top:12px;margin-top:12px}
+.item{border-top:1px dashed var(--line);padding-top:12px;margin-top:12px;margin-bottom:12px}
 .logoprev{max-width:160px;display:block;margin-bottom:8px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:6px}
 .msg{color:#a33;min-height:1.5em;margin:10px 0 0;font-size:15px}
 .ok{color:#2d6a3e}
-.bar{position:sticky;bottom:0;background:var(--blush);padding:12px 0;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.bar{position:sticky;bottom:0;background:var(--blush);padding:12px 0;display:flex;gap:12px;align-items:center;flex-wrap:wrap;border-top:1px solid var(--line)}
 :focus-visible{outline:3px solid var(--bronze);outline-offset:2px}
 </style>
 </head>
@@ -51,7 +51,10 @@ input[type=text],input[type=email],input[type=password],textarea{width:100%;font
   <div class="top"><div><b>Arshhi admin</b><a href="/" target="_blank" rel="noopener">View website</a><button class="sm" id="out" type="button">Log out</button></div></div>
   <main>
     <div id="ed"></div>
-    <div class="bar"><button class="btn" id="sv" type="button">Save changes</button></div>
+    <div class="bar">
+      <button class="btn" id="sv" type="button">Publish Changes Live</button>
+      <p class="msg" id="sm" role="alert"></p>
+    </div>
   </main>
 </div>
 
@@ -97,6 +100,7 @@ async function enter(){
     var r = await fetch('/api/content', { cache: 'no-store' });
     if(r.ok){
       w = await r.json();
+      w.services = w.services || [];
       w.reviews = w.reviews || [];
       draw();
     } else {
@@ -110,46 +114,73 @@ async function enter(){
 
 async function saveAllData(){
   $('sv').disabled = true;
+  $('sm').textContent = "Saving changes...";
+  $('sm').className = "msg ok";
   try {
     var res = await api('/api/content', w);
     if(res.success || res.status === 200){
+      $('sm').textContent = "Changes published live to arshhi.com!";
       alert("Changes published live to arshhi.com successfully!");
     } else {
-      alert("Failed to save updates.");
+      $('sm').textContent = "Failed to save updates.";
+      $('sm').className = "msg";
     }
   } catch(e) {
-    alert("Error communicating with server.");
+    $('sm').textContent = "Error communicating with server.";
+    $('sm').className = "msg";
   }
   $('sv').disabled = false;
 }
 $('sv').addEventListener('click', saveAllData);
 
-function fld(label,obj,key,mode){var x=mk('label','f'),el=document.createElement(mode?'textarea':'input');if(!mode)el.type='text';
+function fld(label,obj,key,mode){
+  var x=mk('label','f'),el=document.createElement(mode==='textarea'?'textarea':'input');
+  if(mode!=='textarea')el.type='text';
   el.value=obj[key] || '';
   el.addEventListener('input',function(){obj[key]=el.value});
-  x.append(mk('span',null,label),el);return x}
+  x.append(mk('span',null,label),el);return x
+}
 
 function group(t){var f=mk('fieldset');f.append(mk('legend',null,t));return f}
-  function listGroup(title,arr,fields,blank,addLabel,name){var fs=group(title);
-  function d(){fs.innerHTML='';fs.append(mk('legend',null,title));
-    arr.forEach(function(it,i){var box=mk('div','item');box.append(mk('b',null,name+' '+(i+1)));
-      fields.forEach(function(f){box.append(fld(f[0],it,f[1],f[2]))});
-      var rm=mk('button','sm','Remove this '+name.toLowerCase());rm.type='button';rm.onclick=function(){arr.splice(i,1);d()};box.append(rm);fs.append(box)});
-    var add=mk('button','sm',addLabel);add.type='button';add.style.marginTop='14px';add.onclick=function(){arr.push(JSON.parse(JSON.stringify(blank)));d()};fs.append(add)}
-  d();return fs}
 
+function listGroup(title,arr,fields,blank,addLabel,name){
+  var fs=group(title);
+  function d(){
+    fs.innerHTML='';fs.append(mk('legend',null,title));
+    arr.forEach(function(it,i){
+      var box=mk('div','item');
+      box.append(mk('b',null,name+' '+(i+1)));
+      fields.forEach(function(f){
+        var x=mk('label','f'),el=document.createElement(f[2]==='textarea'?'textarea':'input');
+        if(f[2]!=='textarea')el.type='text';
+        el.value=it[f[1]] || '';
+        el.addEventListener('input',function(){it[f[1]]=el.value});
+        x.append(mk('span',null,f[0]),el);
+        box.append(x);
+      });
+      var rm=mk('button','sm','Remove this '+name.toLowerCase());
+      rm.type='button';rm.style.marginTop='6px';
+      rm.onclick=function(){arr.splice(i,1);d()};
+      box.append(rm);fs.append(box)
+    });
+    var add=mk('button','sm',addLabel);add.type='button';add.style.marginTop='14px';
+    add.onclick=function(){arr.push(JSON.parse(JSON.stringify(blank)));d()};
+    fs.append(add)
+  }
+  d();return fs
+}
 
 function draw(){
   var e=$('ed');e.innerHTML='';
   
   // 1. Business Info Panel
-  var g=group('Business info');
-  g.append(fld('Business Name',w,'brand'), fld('Tagline (Footer Text)',w,'tagline'));
+  var g=group('Business Info');
+  g.append(fld('Business Name (Logo Brand Text)',w,'brand'), fld('Tagline (Footer Text)',w,'tagline'));
   e.append(g);
 
-  // 2. Interactive Logo Panel
+  // 2. Logo Image Settings with Preview Element Logic
   g=group('Logo Image Settings');
-  var pv=mk('img','logoprev');pv.src=w.logo || '';pv.alt='Logo Preview';
+  var pv=mk('img','logoprev');pv.src=w.logo || '';pv.style.display=w.logo?'block':'none';
   var fi=document.createElement('input');fi.type='file';fi.accept='image/*';
   fi.onchange=function(){
     var f=fi.files[0];if(!f)return;
@@ -160,33 +191,32 @@ function draw(){
         var k=Math.min(1,640/Math.max(im.width,im.height)),c=document.createElement('canvas');
         c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);
         c.getContext('2d').drawImage(im,0,0,c.width,c.height);
-        w.logo=c.toDataURL('image/webp',.88);pv.src=w.logo
+        w.logo=c.toDataURL('image/webp',.88);pv.src=w.logo;pv.style.display='block';
       };im.src=r.result
     };r.readAsDataURL(f)
   };
   g.append(pv,fi);e.append(g);
 
-  // 3. Main Headline Sections
-  g=group('Top Section / Hero');
-  g.append(fld('Main Title Headline',w,'headline'), fld('Subtitle Description',w,'description'));
+  // 3. Top Banner Sections
+  g=group('Top Section / Hero Banner');
+  g.append(fld('Main Title Headline',w,'headline'), fld('Subtitle Description Text',w,'description','textarea'));
   e.append(g);
 
-  // 4. Dynamic Services Managed List
-  w.services = w.services || [];
+  // 4. Services List Form Options
   e.append(listGroup('Beauty Care Services Offered', w.services, [
     ['Service Title', 'name'],
-    ['Short Description', 'desc'],
+    ['Short Description Text', 'desc', 'textarea'],
     ['Price Info', 'price']
   ], {name:'', desc:'', price:''}, 'Add New Service Option', 'Service'));
 
-  // 5. Customer Reviews Managed List
-  w.reviews = w.reviews || [];
+  // 5. Reviews Form Options
   e.append(listGroup('Client Reviews & Testimonials', w.reviews, [
     ['Client Name', 'author'],
-    ['Review Comment Text', 'text']
+    ['Review Comment Text', 'text', 'textarea']
   ], {author:'', text:''}, 'Add New Customer Review', 'Review'));
 }
 
+try{var s=JSON.parse(sessionStorage.getItem(SK)||'null');if(s&&s.x>Date.now()){sess=s;enter()}}catch(e){}
 })();
 </script>
 </body>
