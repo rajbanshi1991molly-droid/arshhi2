@@ -1,28 +1,47 @@
 // api/login.js
-const { userOk, passwordOk, json, newToken } = require('./_lib');
+import { Redis } from '@upstash/redis';
 
-module.exports = async (req, res) => {
-  // 1. Only allow POST requests
+// Safe instantiation for Vercel Serverless environment
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN,
+});
+
+export default async function handler(req, res) {
+  // Direct CORS headers to ensure the static frontend can communicate cleanly
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   if (req.method !== 'POST') {
-    return json(res, 405, { error: 'method' });
+    return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
   try {
-    const b = req.body || {};
-    
-    // 2. Check if the username and password match your Vercel Edge Config values
-    const isValidUser = userOk(b.username);
-    const isValidPassword = await passwordOk(String(b.password || ''));
+    const { username, password } = req.body;
 
-    if (!isValidUser || !isValidPassword) {
-      return json(res, 401, { error: 'wrong' });
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Missing username or password' });
     }
 
-    // 3. If correct, generate and return the session token your admin.html expects
-    return json(res, 200, newToken());
+    // Looks up the password string matching the user key in your Upstash database
+    const dbPassword = await redis.get(`user:${username}`);
 
-  } catch (e) {
-    console.error("Login script error:", e);
-    return json(res, 500, { error: 'server' });
+    if (dbPassword && dbPassword === password) {
+      return res.status(200).json({ 
+        success: true, 
+        message: 'Login successful',
+        token: 'auth_session_' + Buffer.from(username).toString('base64') 
+      });
+    } else {
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    }
+
+  } catch (error) {
+    return res.status(500).json({ error: 'Database connection error', details: error.message });
   }
-};
+}
