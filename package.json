@@ -1,8 +1,8 @@
 {
-  "version": 2,
-  "routes": [
-    { "src": "/api/login", "dest": "/api/login.js" },
-    { "src": "/api/content", "dest": "/api/content.js" },
-    { "src": "/(.*)", "dest": "/$1" }
-  ]
+  "name": "arshhi",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@upstash/redis": "^1.34.0"
+  }
 }
