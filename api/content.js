@@ -1,29 +1,46 @@
 // api/content.js
-const { kv } = require('@vercel/kv');
-const { json } = require('./_lib');
+import { Redis } from '@upstash/redis';
 
-module.exports = async function handler(req, res) {
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN,
+});
+
+export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  try {
-    // Saves updates from your text boxes straight into Vercel Storage
-    if (req.method === 'POST') {
-      await kv.set('arshhi_site_data', req.body);
-      return json(res, 200, { success: true });
+  // GET Request: Fetches data to display on the index/admin pages
+  if (req.method === 'GET') {
+    try {
+      const pageContent = await redis.get('site:content');
+      return res.status(200).json(pageContent || { message: "No content initialized yet." });
+    } catch (error) {
+      return res.status(500).json({ error: 'Failed to fetch content', details: error.message });
     }
-
-    // Fetches your saved database texts to keep them visible
-    if (req.method === 'GET') {
-      const storedData = await kv.get('arshhi_site_data');
-      return json(res, 200, storedData || {});
-    }
-  } catch (error) {
-    return json(res, 500, { error: error.message });
   }
-};
+
+  // POST Request: Executed when the admin clicks "Save" or "Update"
+  if (req.method === 'POST') {
+    try {
+      const { contentData } = req.body;
+
+      if (!contentData) {
+        return res.status(400).json({ error: 'No data provided to save' });
+      }
+
+      // Overwrites or creates the application state JSON string in Upstash
+      await redis.set('site:content', contentData);
+      return res.status(200).json({ success: true, message: 'Content saved successfully' });
+    } catch (error) {
+      return res.status(500).json({ error: 'Failed to save content', details: error.message });
+    }
+  }
+
+  return res.status(405).json({ error: 'Method Not Allowed' });
+}
