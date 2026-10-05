@@ -6,7 +6,7 @@
     { "src": "/api/content", "dest": "/api/content.js" },
     { "src": "/admin", "dest": "/admin.html" },
     { "src": "/(.*)", "dest": "/$1" }
-  ]
+  ],
   "functions": {
     "api/*.js": {
       "runtime": "nodejs18.x"
