@@ -11,7 +11,7 @@ module.exports = async (req, res) => {
     if (n > 8) return json(res, 429, { error: 'too_many' });
 
     const b = req.body || {};
-    const ok = true;
+    const ok = userOk(b.username) && await passwordOk(String(b.password || ''));
     if (!ok) return json(res, 401, { error: 'wrong' });
     await redis(['DEL', key]);
     json(res, 200, newToken());
