@@ -61,15 +61,13 @@ var $=function(i){return document.getElementById(i)},SK='arshhi_admin_session',w
 function mk(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
 function say(t,ok){var m=$('lm');m.textContent=t;m.className='msg'+(ok?' ok':'')}
 
-async function api(path,body){
-  var h={'Content-Type':'application/json'};
+async function api(path,body,tok){
+  var h={'Content-Type':'application/json'};if(tok)h.Authorization='Bearer '+tok;
   var r=await fetch(path,{method:'POST',headers:h,body:JSON.stringify(body||{})}),j={};
   try{j=await r.json()}catch(e){}
   j.status=r.status;return j
 }
-
 function keep(j){sess={t:j.token,x:j.expires};try{sessionStorage.setItem(SK,JSON.stringify(sess))}catch(e){}}
-
 async function login(){
   var un=$('em').value.trim(),pw=$('pw').value;
   if(!un||!pw){say('Enter your username and password.');return}
@@ -77,27 +75,22 @@ async function login(){
   try{
     var j=await api('/api/login',{username:un,password:pw});
     if(j.status!==200){
-      say('Wrong username or password.');
-      $('go').disabled=false;return
-    }
+      say(j.status===401?'Wrong username or password.':j.status===429?'Too many attempts. Try again in 15 minutes.':j.error==='setup'?'Setup needed: add the Vercel settings described in SETUP.md and redeploy.':'Could not log in. Please try again.');
+      $('go').disabled=false;return}
     keep(j);enter()
-  }catch(e){say('Could not reach the server.');$('go').disabled=false}
+  }catch(e){say('Could not reach the server. Check your internet connection.');$('go').disabled=false}
 }
-
 $('go').addEventListener('click',login);
 ['em','pw'].forEach(function(i){$(i).addEventListener('keydown',function(e){if(e.key==='Enter')login()})});
-$('fg').addEventListener('click',function(){say('To reset the password, update ADMIN_PASSWORD in your Vercel panel settings.',true)});
-
+$('fg').addEventListener('click',function(){say('To reset the password, follow the "Forgot the password" steps in SETUP.md.',true)});
 function leave(){try{sessionStorage.removeItem(SK)}catch(e){}location.reload()}
 $('out').addEventListener('click',leave);
-
 try{var s=JSON.parse(sessionStorage.getItem(SK)||'null');if(s&&s.x>Date.now()){sess=s;enter()}}catch(e){}
 
 function parseData(t){
   var d=t.match(/<script id="data" type="application\/json">([\s\S]*?)<\/script>/);
   if(!d)throw 0;return JSON.parse(d[1])
 }
-
 async function enter(){
   $('login').style.display='none';$('panel').style.display='block';
   var e=$('ed');e.innerHTML='<p>Loading your website content…</p>';
@@ -105,97 +98,51 @@ async function enter(){
     var r=await fetch('/api/content?fresh=1',{cache:'no-store'});
     if(r.ok){w=await r.json()}
     else{var t=await (await fetch('/',{cache:'no-store'})).text();w=parseData(t)}
-    w.services=w.services||[];
-    w.reviews=w.reviews||[];
-    draw()
-  }catch(x){
-    e.innerHTML='';
-    e.append(mk('p','msg','Could not load the website content. Check file setups.'))
-  }
+    w.services=w.services||[];w.reviews=w.reviews||[];draw()
+  }catch(x){e.innerHTML='';e.append(mk('p','msg','Could not load the website content. Keep index.html in the same folder as admin.html.'))}
 }
 
 async function save(){
-  $('sv').disabled=true;$('sm').textContent='Saving...';$('sm').className='msg ok';
-  try{
-    var j=await api('/api/content',w);
-    if(j.success || j.status===200){$('sm').textContent='Changes saved successfully!';alert('Saved!')}
-    else{$('sm').textContent='Error saving changes.';$('sm').className='msg'}
-  }catch(e){$('sm').textContent='Network error.';$('sm').className='msg'}
+  $('sv').disabled=true;var m=$('sm');m.textContent='Saving...';m.className='msg ok';
+  try{var j=await api('/api/save',w,sess.t);
+    if(j.status===200){m.textContent='Changes saved successfully!';alert('Saved!')}
+    else{m.textContent=j.error==='auth'?'Session expired. Please log in again.':j.error==='validation'?'Invalid data format.':'Error saving changes.';m.className='msg'}}
+  catch(e){m.textContent='Could not reach the server.';m.className='msg'}
   $('sv').disabled=false;
 }
 $('sv').addEventListener('click',save);
 
-function fld(label,obj,key,mode){
-  var x=mk('label','f'),el=document.createElement(mode?'textarea':'input');
-  if(!mode)el.type='text';
-  el.value=obj[key]||'';
-  el.addEventListener('input',function(){obj[key]=el.value});
-  x.append(mk('span',null,label),el);return x
-}
-
+function fld(label,obj,key,mode){var x=mk('label','f'),el=document.createElement(mode?'textarea':'input');if(!mode)el.type='text';if(mode)el.rows=mode==='lines'?4:3;
+  el.value=mode==='lines'?(obj[key]||[]).join('
+'):(obj[key]||'');
+  el.addEventListener('input',function(){obj[key]=mode==='lines'?el.value.split('
+').map(function(s){return s.trim()}).filter(Boolean):el.value});
+  x.append(mk('span',null,label),el);return x}
 function group(t){var f=mk('fieldset');f.append(mk('legend',null,t));return f}
-
-function listGroup(title,arr,fields,blank,addLabel,name){
-  var fs=group(title);
-  function d(){
-    fs.innerHTML='';fs.append(mk('legend',null,title));
-    arr.forEach(function(it,i){
-      var box=mk('div','item');box.append(mk('b',null,name+' '+(i+1)));
+function listGroup(title,arr,fields,blank,addLabel,name){var fs=group(title);
+  function d(){fs.innerHTML='';fs.append(mk('legend',null,title));
+    arr.forEach(function(it,i){var box=mk('div','item');box.append(mk('b',null,name+' '+(i+1)));
       fields.forEach(function(f){box.append(fld(f[0],it,f[1],f[2]))});
-      var rm=mk('button','sm','Remove this '+name.toLowerCase());
-      rm.type='button';rm.style.marginTop='6px';
-      rm.onclick=function(){arr.splice(i,1);d()};
-      box.append(rm);fs.append(box)
-    });
-    var add=mk('button','sm',addLabel);add.type='button';add.style.marginTop='14px';
-    add.onclick=function(){arr.push(JSON.parse(JSON.stringify(blank)));d()};
-    fs.append(add)
-  }
-  d();return fs
-}
+      var rm=mk('button','sm','Remove this '+name.toLowerCase());rm.type='button';rm.onclick=function(){arr.splice(i,1);d()};box.append(rm);fs.append(box)});
+    var add=mk('button','sm',addLabel);add.type='button';add.style.marginTop='14px';add.onclick=function(){arr.push(JSON.parse(JSON.stringify(blank)));d()};fs.append(add)}
+  d();return fs}
+function pwField(label){var l=mk('label','f'),i=document.createElement('input');i.type='password';i.autocomplete='new-password';l.append(mk('span',null,label),i);return [l,i]}
 
 function draw(){
   var e=$('ed');e.innerHTML='';
-  
-  var g=group('Business Info');
-  g.append(fld('Business Name',w,'brand'),fld('Tagline (shown in footer)',w,'tagline'));
-  e.append(g);
-  
-  g=group('Logo');
-  var pv=mk('img','logoprev');pv.src=w.logo||'';
-  var fi=document.createElement('input');fi.type='file';fi.accept='image/*';
-  fi.onchange=function(){
-    var f=fi.files[0];if(!f)return;
-    var r=new FileReader();
-    r.onload=function(){
-      var im=new Image();
-      im.onload=function(){
-        var k=Math.min(1,640/Math.max(im.width,im.height)),c=document.createElement('canvas');
-        c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);
-        c.getContext('2d').drawImage(im,0,0,c.width,c.height);
-        w.logo=c.toDataURL('image/webp',.88);pv.src=w.logo
-      };im.src=r.result
-    };r.readAsDataURL(f)
-  };
+  var g=group('Business');g.append(fld('Business name',w,'brand'),fld('Tagline (shown in footer)',w,'tagline'));e.append(g);
+  g=group('Logo');var pv=mk('img','logoprev');pv.src=w.logo || '';pv.alt='Current logo';var fi=document.createElement('input');fi.type='file';fi.accept='image/*';
+  fi.onchange=function(){var f=fi.files;if(!f || !f[0])return;var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){var k=Math.min(1,640/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);w.logo=c.toDataURL('image/webp',.88);pv.src=w.logo};im.src=r.result};r.readAsDataURL(f[0])};
   g.append(pv,fi);e.append(g);
-  
-  g=group('Top Section / Hero');
-  g.append(fld('Headline',w,'headline'),fld('Description',w,'description','textarea'));
-  e.append(g);
-  
-  e.append(listGroup('Services Offered',w.services,[
-    ['Service Title','name'],
-    ['Description','desc','textarea'],
-    ['Price Info','price'],
-    ['Icon Code','icon']
-  ],{name:'',desc:'',price:'',icon:''},'Add New Service','Service'));
-  
-  e.append(listGroup('Client Reviews',w.reviews,[
-    ['Client Name','author'],
-    ['Review Comment Text','text','textarea'],
-    ['Stars Metric','stars'],
-    ['Review Date','date']
-  ],{author:'',text:'',stars:'',date:''},'Add New Review','Review'));
+  g=group('Top section');g.append(fld('Headline',w,'headline'),fld('Description',w,'description','textarea'));e.append(g);
+  e.append(listGroup('Services',w.services,[['Service title','name'],['Description','desc','textarea'],['Price details','price'],['Icon ID','icon']],{name:'',desc:'',price:'',icon:''},'Add service','Service'));
+  e.append(listGroup('Reviews',w.reviews,[['Client name','author'],['Comment text','text','textarea'],['Stars (1-5)','stars'],['Date','date']],{author:'',text:'',stars:'',date:''},'Add review','Review'));
+  g=group('Change password');var f1=pwField('Current password'),f2=pwField('New password');g.append(f1,f2);var b=mk('button','sm','Update password');b.type='button';
+  b.onclick=async function(){var c=f1.value,n=f2.value;if(!c||!n){alert('Fill in both fields.');return}if(n.length<8){alert('Password must be at least 8 characters.');return}
+    b.disabled=true;var j=await api('/api/password',{current:c,next:n},sess.t);b.disabled=false;
+    if(j.status===200){alert('Password updated.');f1.value='';f2.value=''}
+    else{alert(j.error==='auth'?'Session expired. Please log in again.':j.error==='wrong_current'?'Incorrect current password.':'Error changing password.')}};
+  g.append(b);e.append(g);
 }
 })();
 </script>
