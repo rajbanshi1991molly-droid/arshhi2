@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Arshhi Admin</title>
+<style>
+:root{--bg:#fff;--blush:#fbefec;--ink:#3b2a20;--soft:#6e5b4e;--bronze:#9a6a36;--rose:#e3a0a0;--line:#ecdcd3}
+*{box-sizing:border-box}
+body{margin:0;background:var(--blush);color:var(--ink);font:400 17px/1.6 Calibri,Carlito,"Segoe UI",system-ui,Arial,sans-serif}
+h1{margin:0 0 6px;color:var(--bronze);font-size:30px;line-height:1.2}
+.card{background:var(--bg);border:1px solid var(--line);border-radius:16px;padding:28px}
+#login{max-width:400px;margin:12vh auto 0;padding:0 16px}
+#login p.s{color:var(--soft);margin:0 0 18px}
+.top{background:var(--bg);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.top div{max-width:820px;margin:0 auto;padding:12px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.top b{font-size:22px;color:var(--bronze);margin-right:auto}
+.top a{color:var(--bronze);font-weight:700}
+#panel{display:none}
+main{max-width:820px;margin:20px auto 80px;padding:0 16px}
+fieldset{border:1px solid var(--line);border-radius:12px;margin:0 0 18px;padding:14px 16px;background:var(--bg)}
+legend{font-weight:700;color:var(--bronze);padding:0 6px;font-size:18px}
+.f{display:block;margin-bottom:12px}
+.f span{display:block;font-size:15px;color:var(--soft);margin-bottom:4px}
+input[type=text],input[type=email],input[type=password],textarea{width:100%;font:inherit;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.btn{font:inherit;font-weight:700;cursor:pointer;border:2px solid var(--bronze);background:var(--bronze);color:#fff;border-radius:999px;padding:10px 22px}
+.btn:disabled{opacity:.6;cursor:wait}
+.sm{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--blush);color:var(--ink);border-radius:8px;padding:8px 14px}
+.link{font:inherit;background:none;border:0;color:var(--bronze);text-decoration:underline;cursor:pointer;padding:0;margin-left:14px}
+.item{border-top:1px dashed var(--line);padding-top:12px;margin-top:12px}
+.logoprev{max-width:160px;display:block;margin-bottom:8px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:6px}
+.msg{color:#a33;min-height:1.5em;margin:10px 0 0;font-size:15px}
+.ok{color:#2d6a3e}
+.bar{position:sticky;bottom:0;background:var(--blush);padding:12px 0;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+:focus-visible{outline:3px solid var(--bronze);outline-offset:2px}
+</style>
+</head>
+<body>
+
+<div id="login"><div class="card">
+  <h1>Arshhi admin</h1>
+  <p class="s">Log in to edit the website.</p>
+  <label class="f"><span>Username</span><input type="text" id="em" autocomplete="username" autocapitalize="none" spellcheck="false"></label>
+  <label class="f"><span>Password</span><input type="password" id="pw" autocomplete="current-password"></label>
+  <button class="btn" id="go" type="button">Log in</button><button class="link" id="fg" type="button">Forgot password?</button>
+  <p class="msg" id="lm" role="alert"></p>
+</div></div>
+
+<div id="panel">
+  <div class="top"><div><b>Arshhi admin</b><a href="index.html" target="_blank" rel="noopener">View website</a><button class="sm" id="out" type="button">Log out</button></div></div>
+  <main><div id="ed"></div></main>
+</div>
+
+<script>
+(function(){
+var $=function(i){return document.getElementById(i)},SK='arshhi_admin_session',w=null,sess=null;
+function mk(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+function say(t,ok){var m=$('lm');m.textContent=t;m.className='msg'+(ok?' ok':'')}
+
+async function api(path,body,tok){
+  var h={'Content-Type':'application/json'};if(tok)h.Authorization='Bearer '+tok;
+  var r=await fetch(path,{method:'POST',headers:h,body:JSON.stringify(body||{})}),j={};
+  try{j=await r.json()}catch(e){}
+  j.status=r.status;return j
+}
+function keep(j){sess={t:j.token,x:j.expires};try{sessionStorage.setItem(SK,JSON.stringify(sess))}catch(e){}}
+async function login(){
+  var un=$('em').value.trim(),pw=$('pw').value;
+  if(!un||!pw){say('Enter your username and password.');return}
+  $('go').disabled=true;say('');
+  try{
+    var j=await api('/api/login',{username:un,password:pw});
+    if(j.status!==200){
+      say(j.status===401?'Wrong username or password.':j.status===429?'Too many attempts. Try again in 15 minutes.':j.error==='setup'?'Setup needed: add the Vercel settings described in SETUP.md and redeploy.':'Could not log in. Please try again.');
+      $('go').disabled=false;return}
+    keep(j);enter()
+  }catch(e){say('Could not reach the server. Check your internet connection.');$('go').disabled=false}
+}
+$('go').addEventListener('click',login);
+['em','pw'].forEach(function(i){$(i).addEventListener('keydown',function(e){if(e.key==='Enter')login()})});
+$('fg').addEventListener('click',function(){say('To reset the password, follow the "Forgot the password" steps in SETUP.md (it takes about a minute in your Vercel dashboard).',true)});
+function leave(){try{sessionStorage.removeItem(SK)}catch(e){}location.reload()}
+$('out').addEventListener('click',leave);
+try{var s=JSON.parse(sessionStorage.getItem(SK)||'null');if(s&&s.x>Date.now()){sess=s;enter()}}catch(e){}
+
+function parseData(t){var d=t.match(/<script id="data" type="application\/json">([\s\S]*?)<\/script>/);if(!d)throw 0;return JSON.parse(d[1])}
+async function enter(){
+  $('login').style.display='none';$('panel').style.display='block';
+  var e=$('ed');e.innerHTML='<p>Loading your website content…</p>';
+  try{
+    var r=await fetch('/api/content?fresh=1',{cache:'no-store'});
+    if(r.ok){w=await r.json()}
+    else{var t=await (await fetch('index.html',{cache:'no-store'})).text();w=parseData(t)}
+    w.reviews=w.reviews||[];draw()
+  }catch(x){e.innerHTML='';e.append(mk('p','msg','Could not load the website content. Keep index.html in the same folder as admin.html.'))}
+}
+
+function fld(label,obj,key,mode){var x=mk('label','f'),el=document.createElement(mode?'textarea':'input');if(!mode)el.type='text';if(mode)el.rows=mode==='lines'?4:3;
+  el.value=mode==='lines'?obj[key].join('\n'):obj[key];
+  el.addEventListener('input',function(){obj[key]=mode==='lines'?el.value.split('\n').map(function(s){return s.trim()}).filter(Boolean):el.value});
+  x.append(mk('span',null,label),el);return x}
+function group(t){var f=mk('fieldset');f.append(mk('legend',null,t));return f}
+function listGroup(title,arr,fields,blank,addLabel,name){var fs=group(title);
+  function d(){fs.innerHTML='';fs.append(mk('legend',null,title));
+    arr.forEach(function(it,i){var box=mk('div','item');box.append(mk('b',null,name+' '+(i+1)));
+      fields.forEach(function(f){box.append(fld(f[0],it,f[1],f[2]))});
+      var rm=mk('button','sm','Remove this '+name.toLowerCase());rm.type='button';rm.onclick=function(){arr.splice(i,1);d()};box.append(rm);fs.append(box)});
+    var add=mk('button','sm',addLabel);add.type='button';add.style.marginTop='14px';add.onclick=function(){arr.push(JSON.parse(JSON.stringify(blank)));d()};fs.append(add)}
+  d();return fs}
+function pwField(label){var l=mk('label','f'),i=document.createElement('input');i.type='password';i.autocomplete='new-password';l.append(mk('span',null,label),i);return [l,i]}
+function draw(){
+  var e=$('ed');e.innerHTML='';
+  var g=group('Business');g.append(fld('Business name',w,'brand'),fld('Tagline (shown in footer)',w,'tagline'));e.append(g);
+  g=group('Logo');var pv=mk('img','logoprev');pv.src=w.logo;pv.alt='Current logo';var fi=document.createElement('input');fi.type='file';fi.accept='image/*';
+  fi.onchange=function(){var f=fi.files[0];if(!f)return;var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){var k=Math.min(1,640/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);w.logo=c.toDataURL('image/webp',.88);pv.src=w.logo};im.src=r.result};r.readAsDataURL(f)};
+  g.append(pv,fi);e.append(g);
+  g=group('Top section');g.append(fld('Headline',w,'heroTitle'),fld('Description',w,'heroText','area'));e.append(g);
+  g=group('Contact and hours');g.append(fld('Phone number',w,'phone'),fld('Days (for example: Open every day)',w,'days'),fld('Hours (for example: 10 am to 8 pm)',w,'hours'),fld('Address',w,'address','area'));e.append(g);
+  e.append(listGroup('Services',w.services,[['Service name','n'],['Short line (shown on the page)','s'],['Description (shown in the pop-up)','d','area'],['What is included (one item per line)','l','lines']],{n:'New service',s:'',d:'',l:[]},'Add a service','Service'));
+  e.append(listGroup('How booking works',w.steps,[['Step title','t'],['Step text','d','area']],{t:'New step',d:''},'Add a step','Step'));
+  e.append(listGroup('Customer feedback (shown in the top section)',w.reviews,[['Customer name','n'],['Stars (1 to 5)','r'],['What they said','c','area']],{n:'',r:'5',c:''},'Add feedback','Feedback'));
+
+  g=group('Change password');
+  var c0=pwField('Current password'),c1=pwField('New password (at least 8 characters)'),c2=pwField('Type the new password again');
+  c0[1].autocomplete='current-password';
+  var cp=mk('button','sm','Change password'),cm=mk('p','msg');cp.type='button';cm.setAttribute('role','status');
+  cp.onclick=async function(){
+    cm.className='msg';
+    if(!c0[1].value){cm.textContent='Enter your current password.';return}
+    if(c1[1].value.length<8){cm.textContent='Use at least 8 characters.';return}
+    if(c1[1].value!==c2[1].value){cm.textContent='The two new passwords do not match.';return}
+    if(!sess||sess.x<Date.now()){cm.textContent='Your session ended. Log in again.';setTimeout(leave,1500);return}
+    cp.disabled=true;cm.textContent='Changing…';
+    try{
+      var j=await api('/api/password',{current:c0[1].value,next:c1[1].value},sess.t);
+      if(j.status===200){c0[1].value=c1[1].value=c2[1].value='';cm.className='msg ok';cm.textContent='Password changed. Use the new password next time you log in.'}
+      else if(j.status===403)cm.textContent='The current password is wrong.';
+      else if(j.status===401){cm.textContent='Your session ended. Log in again.';setTimeout(leave,1500)}
+      else cm.textContent='Could not change the password. Please try again.'
+    }catch(x){cm.textContent='Could not reach the server.'}
+    cp.disabled=false
+  };
+  g.append(c0[0],c1[0],c2[0],cp,cm);e.append(g);
+
+  var bar=mk('div','bar'),sv=mk('button','btn','Save and publish'),m=mk('span','msg');sv.type='button';m.setAttribute('role','status');bar.append(sv,m);e.append(bar);
+  sv.onclick=async function(){
+    if(String(w.phone).replace(/\D/g,'').length<10){m.className='msg';m.textContent='Enter a valid phone number.';return}
+    if(!w.brand.trim()||!w.services.length){m.className='msg';m.textContent='Add a business name and at least one service.';return}
+    if(!sess||sess.x<Date.now()){m.className='msg';m.textContent='Your session ended. Log in again.';setTimeout(leave,1500);return}
+    sv.disabled=true;m.className='msg';m.textContent='Publishing…';
+    try{
+      var j=await api('/api/save',w,sess.t);
+      if(j.status===200){m.className='msg ok';m.textContent='Published. Your website now shows these changes.'}
+      else if(j.status===401){m.textContent='Your session ended. Log in again.';setTimeout(leave,1500)}
+      else if(j.status===413){m.textContent='The content is too large. Use a smaller logo.'}
+      else{m.textContent='Could not publish. Please try again.'}
+    }catch(x){m.textContent='Could not reach the server. Check your internet connection.'}
+    sv.disabled=false
+  }
+}
+})();
+</script>
+</body>
+</html>
