@@ -95,10 +95,10 @@ async function enter(){
   $('login').style.display='none';$('panel').style.display='block';
   var e=$('ed');e.innerHTML='<p>Loading your website content…</p>';
   try{
-    var r=await fetch('/api/content?fresh=1',{cache:'no-store'});
-    if(r.ok){w=await r.json()}
-    else{var t=await (await fetch('/',{cache:'no-store'})).text();w=parseData(t)}
-    w.services=w.services||[];w.reviews=w.reviews||[];draw()
+    var r=await fetch('/api/content',{cache:'no-store'}),got=null;
+    if(r.ok){try{got=await r.json()}catch(z){}}
+    if(!got||!got.brand){var t=await (await fetch('/',{cache:'no-store'})).text();got=parseData(t)}
+    w=got;w.services=w.services||[];w.reviews=w.reviews||[];w.steps=w.steps||[];draw()
   }catch(x){e.innerHTML='';e.append(mk('p','msg','Could not load the website content. Keep index.html in the same folder as admin.html.'))}
 }
 
@@ -106,17 +106,15 @@ async function save(){
   $('sv').disabled=true;var m=$('sm');m.textContent='Saving...';m.className='msg ok';
   try{var j=await api('/api/save',w,sess.t);
     if(j.status===200){m.textContent='Changes saved successfully!';alert('Saved!')}
-    else{m.textContent=j.error==='auth'?'Session expired. Please log in again.':j.error==='validation'?'Invalid data format.':'Error saving changes.';m.className='msg'}}
+    else{m.textContent=j.error==='auth'?'Session expired. Please log in again.':j.error==='invalid'?'Invalid data format.':j.error==='too_large'?'Content is too large. Try a smaller logo.':'Error saving changes.';m.className='msg'}}
   catch(e){m.textContent='Could not reach the server.';m.className='msg'}
   $('sv').disabled=false;
 }
 $('sv').addEventListener('click',save);
 
 function fld(label,obj,key,mode){var x=mk('label','f'),el=document.createElement(mode?'textarea':'input');if(!mode)el.type='text';if(mode)el.rows=mode==='lines'?4:3;
-  el.value=mode==='lines'?(obj[key]||[]).join('
-'):(obj[key]||'');
-  el.addEventListener('input',function(){obj[key]=mode==='lines'?el.value.split('
-').map(function(s){return s.trim()}).filter(Boolean):el.value});
+  el.value=mode==='lines'?(obj[key]||[]).join('\n'):(obj[key]||'');
+  el.addEventListener('input',function(){obj[key]=mode==='lines'?el.value.split('\n').map(function(s){return s.trim()}).filter(Boolean):el.value});
   x.append(mk('span',null,label),el);return x}
 function group(t){var f=mk('fieldset');f.append(mk('legend',null,t));return f}
 function listGroup(title,arr,fields,blank,addLabel,name){var fs=group(title);
@@ -134,9 +132,11 @@ function draw(){
   g=group('Logo');var pv=mk('img','logoprev');pv.src=w.logo||'';pv.alt='Current logo';var fi=document.createElement('input');fi.type='file';fi.accept='image/*';
   fi.onchange=function(){var f=fi.files;if(!f||!f[0])return;var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){var k=Math.min(1,640/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);w.logo=c.toDataURL('image/webp',.88);pv.src=w.logo};im.src=r.result};r.readAsDataURL(f[0])};
   g.append(pv,fi);e.append(g);
-  g=group('Top section');g.append(fld('Headline',w,'headline'),fld('Description',w,'description','textarea'));e.append(g);
-  e.append(listGroup('Services',w.services,[['Service title','name'],['Description','desc','textarea'],['Price details','price'],['Icon ID','icon']],{name:'',desc:'',price:'',icon:''},'Add service','Service'));
-  e.append(listGroup('Reviews',w.reviews,[['Client name','author'],['Comment text','text','textarea'],['Stars (1-5)','stars'],['Date','date']],{author:'',text:'',stars:'',date:''},'Add review','Review'));
+  g=group('Top section');g.append(fld('Headline',w,'heroTitle'),fld('Description',w,'heroText','textarea'));e.append(g);
+  g=group('Contact');g.append(fld('Phone',w,'phone'),fld('Days open (e.g. Open every day)',w,'days'),fld('Hours (e.g. 10 am to 8 pm)',w,'hours'),fld('Address',w,'address','textarea'));e.append(g);
+  e.append(listGroup('Services',w.services,[['Service name','n'],['Short line (shown on the card)','s'],['Full description (shown in the popup)','d','textarea'],['What is included (one per line)','l','lines']],{n:'',s:'',d:'',l:[]},'Add service','Service'));
+  e.append(listGroup('Booking steps',w.steps,[['Step title','t'],['Step text','d','textarea']],{t:'',d:''},'Add step','Step'));
+  e.append(listGroup('Reviews',w.reviews,[['Client name','n'],['Comment text','c','textarea'],['Stars (1-5)','r']],{n:'',c:'',r:'5'},'Add review','Review'));
   g=group('Change password');var f1=pwField('Current password'),f2=pwField('New password');g.append(f1,f2);var b=mk('button','sm','Update password');b.type='button';
   b.onclick=async function(){var c=f1.value,n=f2.value;if(!c||!n){alert('Fill in both fields.');return}if(n.length<8){alert('Password must be at least 8 characters.');return}
     b.disabled=true;var j=await api('/api/password',{current:c,next:n},sess.t);b.disabled=false;
