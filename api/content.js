@@ -1,10 +1,9 @@
 // api/content.js
-import { kv } from '@vercel/kv';
+const { kv } = require('@vercel/kv');
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   
-  // Default fallback layout if your database is empty
   const defaultData = {
     brand: "Arshhi",
     tagline: "Door to door beauty care",
@@ -13,14 +12,12 @@ export default async function handler(req, res) {
   };
 
   try {
-    // If the admin dashboard panel hits save (POST)
     if (req.method === 'POST') {
       const updatedData = req.body;
       await kv.set('arshhi_site_data', updatedData);
       return res.status(200).json({ success: true });
     }
 
-    // If the public homepage loads your content (GET)
     if (req.method === 'GET') {
       const storedData = await kv.get('arshhi_site_data');
       return res.status(200).json(storedData || defaultData);
@@ -28,4 +25,4 @@ export default async function handler(req, res) {
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
-}
+};
