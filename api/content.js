@@ -12,13 +12,13 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    // 1. Receives data from your admin panel save button and stores it
+    // Saves updates from your text boxes straight into Vercel Storage
     if (req.method === 'POST') {
       await kv.set('arshhi_site_data', req.body);
       return json(res, 200, { success: true });
     }
 
-    // 2. Serves data to your dashboard and index fields
+    // Fetches your saved database texts to keep them visible
     if (req.method === 'GET') {
       const storedData = await kv.get('arshhi_site_data');
       return json(res, 200, storedData || {});
