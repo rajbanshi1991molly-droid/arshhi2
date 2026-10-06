@@ -363,7 +363,7 @@ function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){retur
 function dg(p){var d=String(p||'').replace(/\D/g,'');return d.length===10?'91'+d:d}
 function su(u){u=String(u||'').trim();return(/^\s*(javascript|vbscript):/i.test(u)||/^\s*data:(?!image\/)/i.test(u))?'':u}
 function cat(s){return String(s.c||s.category||'').trim()}
-function pr(s){var v=s.p!=null?s.p:s.price;return v==null?'':String(v).trim()}
+function pr(s){var v=s.p!=null?s.p:s.price;return v==null?'':String(v).replace(/^\s*(\u20B9|rs\.?|inr)\s*/i,'').trim()}
 function head(d){return '<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>'+esc(d.brand)+' \u2013 Door to door beauty care</title><meta name="description" content="'+esc(d.brand)+' brings beauty care services to your home in Kolkata, West Bengal.">'}
 
 /* Service photos: reads services[i].photos (array of image addresses). Also accepts images, gallery, imgs, photo, img, image. */
