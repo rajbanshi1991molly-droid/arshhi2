@@ -124,6 +124,14 @@ async function enter(){
   }catch(x){e.innerHTML='';e.append(mk('p','msg','Could not load the website content. Keep index.html in the same folder as admin.html.'))}
 }
 
+function saveHint(j){
+  var s=j.status,e=j.error?' / '+j.error:'',h;
+  if(s===404)h='The save address /api/save was not found. Check that api/save.js is in the api folder and redeployed.';
+  else if(s===405)h='The server did not accept the save request.';
+  else if(s===500&&j.error==='server')h='The server could not write to the database. Check the Vercel settings: the Redis token must allow writing (not the read-only token).';
+  else if(s===500)h='The server crashed. Check the Vercel function log for api/save.';
+  else h='Unexpected answer from the server.';
+  return 'Error saving changes (server answered '+s+e+'). '+h}
 async function save(){
   $('sv').disabled=true;var m=$('sm');m.textContent='Saving...';m.className='msg ok';$('ckm').textContent='';
   try{
@@ -132,7 +140,7 @@ async function save(){
       m.textContent='Changes saved successfully!';
       var d=await verify();
       alert(d&&d.length?'Saved, but the website did not keep everything. See the message below the buttons.':'Saved!')}
-    else{m.textContent=j.error==='auth'?'Session expired. Please log in again.':j.error==='invalid'?'Invalid data format.':j.error==='too_large'||j.status===413?'Content is too large. Try a smaller logo.':'Error saving changes.';m.className='msg'}}
+    else{m.textContent=j.error==='auth'?'Session expired. Please log in again.':j.error==='invalid'?'Invalid data format.':j.error==='too_large'||j.status===413?'Content is too large. Try a smaller logo.':saveHint(j);m.className='msg'}}
   catch(e){m.textContent='Could not reach the server.';m.className='msg'}
   $('sv').disabled=false;
 }
