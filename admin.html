@@ -51,6 +51,13 @@ input[type=text],input[type=email],input[type=password],textarea{width:100%;font
   <div class="top"><div><b>Arshhi admin</b><a href="/" target="_blank" rel="noopener">View website</a><button class="sm" id="out" type="button">Log out</button></div></div>
   <main>
     <div id="ed"></div>
+    <fieldset id="pwbox"><legend>Change password</legend>
+      <label class="f"><span>Current password</span><input type="password" id="pwc" autocomplete="current-password"></label>
+      <label class="f"><span>New password (at least 8 characters)</span><input type="password" id="pwn" autocomplete="new-password"></label>
+      <label class="f"><span>Repeat new password</span><input type="password" id="pwn2" autocomplete="new-password"></label>
+      <button class="sm" id="pwBtn" type="button">Change password</button>
+      <p class="msg" id="pwm" role="alert"></p>
+    </fieldset>
     <div class="bar"><button class="btn" id="sv" type="button">Save changes</button><button class="sm" id="ck" type="button">Check what the website has</button><p class="msg" id="sm" role="alert"></p></div>
     <p class="msg" id="ckm" role="status"></p>
   </main>
@@ -92,6 +99,20 @@ function parseData(t){
   var d=t.match(/<script[^>]*id="data"[^>]*>([\s\S]*?)<\/script>/i);
   if(!d)throw 0;return JSON.parse(d[1].trim())
 }
+var SOC=['facebook','instagram','linkedin'];
+function norm(d){
+  d.services=d.services||[];d.steps=d.steps||[];d.reviews=d.reviews||[];d.social=d.social||{};
+  SOC.forEach(function(k){if(!d.social[k]&&d[k])d.social[k]=String(d[k])});
+  d.services.forEach(function(s){
+    if(!String(s.c||'').trim()&&s.category)s.c=String(s.category);
+    if((s.p==null||s.p==='')&&s.price!=null)s.p=String(s.price);
+    s.c=String(s.c==null?'':s.c);
+    s.p=String(s.p==null?'':s.p).replace(/^\s*(\u20B9|rs\.?|inr)\s*/i,'').trim();
+    s.l=Array.isArray(s.l)?s.l:[];
+  });
+  d.reviews.forEach(function(r){r.r=String(r.r==null||r.r===''?'5':r.r)});
+  return d}
+function payload(){return norm(JSON.parse(JSON.stringify(w)))}
 async function enter(){
   $('login').style.display='none';$('panel').style.display='block';
   var e=$('ed');e.innerHTML='<p>Loading your website content…</p>';
@@ -99,23 +120,41 @@ async function enter(){
     var r=await fetch('/api/content',{cache:'no-store'}),got=null;
     if(r.ok){try{got=await r.json()}catch(z){}}
     if(!got||!got.brand){var t=await (await fetch('/',{cache:'no-store'})).text();got=parseData(t)}
-    w=got;w.services=w.services||[];w.reviews=w.reviews||[];w.steps=w.steps||[];draw()
+    w=norm(got);draw()
   }catch(x){e.innerHTML='';e.append(mk('p','msg','Could not load the website content. Keep index.html in the same folder as admin.html.'))}
 }
 
 async function save(){
-  $('sv').disabled=true;var m=$('sm');m.textContent='Saving...';m.className='msg ok';
-  try{var j=await api('/api/save',w,sess.t);
-    if(j.status===200){m.textContent='Changes saved successfully!';alert('Saved!')}
-    else{m.textContent=j.error==='auth'?'Session expired. Please log in again.':j.error==='invalid'?'Invalid data format.':j.error==='too_large'?'Content is too large. Try a smaller logo.':'Error saving changes.';m.className='msg'}}
+  $('sv').disabled=true;var m=$('sm');m.textContent='Saving...';m.className='msg ok';$('ckm').textContent='';
+  try{
+    var j=await api('/api/save',payload(),sess.t);
+    if(j.status===200){
+      m.textContent='Changes saved successfully!';
+      var d=await verify();
+      alert(d&&d.length?'Saved, but the website did not keep everything. See the message below the buttons.':'Saved!')}
+    else{m.textContent=j.error==='auth'?'Session expired. Please log in again.':j.error==='invalid'?'Invalid data format.':j.error==='too_large'||j.status===413?'Content is too large. Try a smaller logo.':'Error saving changes.';m.className='msg'}}
   catch(e){m.textContent='Could not reach the server.';m.className='msg'}
   $('sv').disabled=false;
 }
 $('sv').addEventListener('click',save);
 
-function fld(label,obj,key,mode){var x=mk('label','f'),el=document.createElement(mode?'textarea':'input');if(!mode)el.type='text';if(mode)el.rows=mode==='lines'?4:3;
+$('pwBtn').addEventListener('click',async function(){
+  var m=$('pwm'),c=$('pwc').value,n=$('pwn').value,n2=$('pwn2').value;m.className='msg';
+  if(!sess){m.textContent='Session expired. Please log in again.';return}
+  if(!c||!n){m.textContent='Enter your current password and a new password.';return}
+  if(n.length<8){m.textContent='The new password must be at least 8 characters.';return}
+  if(n!==n2){m.textContent='The two new passwords do not match.';return}
+  $('pwBtn').disabled=true;m.className='msg ok';m.textContent='Changing...';
+  try{var j=await api('/api/password',{current:c,next:n},sess.t);
+    if(j.status===200){$('pwc').value=$('pwn').value=$('pwn2').value='';m.textContent='Password changed. Use the new password next time you log in.'}
+    else{m.className='msg';m.textContent=j.status===401?'Session expired. Please log in again.':j.status===403?'Your current password is wrong.':j.error==='short'?'The new password must be at least 8 characters.':'Could not change the password. Please try again.'}}
+  catch(e){m.className='msg';m.textContent='Could not reach the server.'}
+  $('pwBtn').disabled=false});
+
+function fld(label,obj,key,mode){var num=mode==='num';if(num)mode=null;var x=mk('label','f'),el=document.createElement(mode?'textarea':'input');if(!mode)el.type='text';if(num)el.inputMode='numeric';if(mode)el.rows=mode==='lines'?4:3;
   el.value=mode==='lines'?(obj[key]||[]).join('\n'):(obj[key]||'');
   el.addEventListener('input',function(){obj[key]=mode==='lines'?el.value.split('\n').map(function(s){return s.trim()}).filter(Boolean):el.value});
+  if(num)el.addEventListener('change',function(){var v=el.value.replace(/[^\d.]/g,'');if(key==='r'&&v!=='')v=String(Math.max(1,Math.min(5,Math.round(+v)||5)));el.value=v;obj[key]=v});
   x.append(mk('span',null,label),el);return x}
 function group(t){var f=mk('fieldset');f.append(mk('legend',null,t));return f}
 function listGroup(title,arr,fields,blank,addLabel,name){var fs=group(title);
@@ -126,15 +165,30 @@ function listGroup(title,arr,fields,blank,addLabel,name){var fs=group(title);
     var add=mk('button','sm',addLabel);add.type='button';add.style.marginTop='14px';add.onclick=function(){arr.push(JSON.parse(JSON.stringify(blank)));d()};fs.append(add)}
   d();return fs}
 function urlFld(label,obj,key){var x=fld(label,obj,key),el=x.querySelector('input');el.placeholder='https://';el.addEventListener('change',function(){var v=el.value.trim();if(v&&!/^https?:\/\//i.test(v))v='https://'+v;el.value=v;obj[key]=v});return x}
-function stats(o){var c=0,p=0;(o.services||[]).forEach(function(s){if(String(s.c||'').trim())c++;if(String(s.p||'').trim())p++});var so=o.social||{};return{cats:c,prices:p,social:['facebook','instagram','linkedin'].filter(function(k){return so[k]}).length}}
-$('ck').addEventListener('click',async function(){var m=$('ckm');if(!w)return;m.className='msg ok';m.textContent='Checking...';
+function S(x){return String(x==null?'':x).trim()}
+function diffs(a,b){
+  var d=[];
+  ['brand','tagline','heroTitle','heroText','phone','days','hours','address','logo'].forEach(function(k){if(S(a[k])!==S(b[k]))d.push(k==='logo'?'logo':k)});
+  SOC.forEach(function(k){if(S((a.social||{})[k])!==S((b.social||{})[k]))d.push(k+' link')});
+  function list(name,A,B,keys,title){
+    if(A.length!==B.length)d.push(name+' count: '+A.length+' here, '+B.length+' on the website');
+    for(var i=0;i<Math.min(A.length,B.length);i++)keys.forEach(function(k){
+      var x=k[0]==='l'&&k.length===1?(A[i].l||[]).join('|'):S(A[i][k[0]]),y=k[0]==='l'&&k.length===1?(B[i].l||[]).join('|'):S(B[i][k[0]]);
+      if(x!==y)d.push(title+' '+(i+1)+' '+k[1])})}
+  list('Services',a.services,b.services,[['n','name'],['s','short line'],['d','description'],['l','included list'],['c','category'],['p','price']],'Service');
+  list('Steps',a.steps,b.steps,[['t','title'],['d','text']],'Step');
+  list('Reviews',a.reviews,b.reviews,[['n','name'],['c','comment'],['r','stars']],'Review');
+  return d}
+async function verify(){
+  var m=$('ckm');if(!w)return null;m.className='msg ok';m.textContent='Checking what the website has...';
   try{var r=await fetch('/api/content',{cache:'no-store'});
-    if(!r.ok){m.className='msg';m.textContent='The website has no saved content yet (server answered '+r.status+'). Press Save changes first.';return}
-    var sv=await r.json(),a=stats(w),b=stats(sv),nm={cats:'categories',prices:'prices',social:'social links'},d=[];
-    Object.keys(a).forEach(function(k){if(a[k]!==b[k])d.push(nm[k]+': '+a[k]+' here, '+b[k]+' on the website')});
-    if(d.length){m.className='msg';m.textContent='Not the same on the website. '+d.join('; ')+'. If you have not pressed Save yet, save first. If you already did, the server is not keeping these fields.'}
-    else m.textContent='The website has everything shown here.'}
-  catch(e){m.className='msg';m.textContent='Could not reach the server.'}});
+    if(!r.ok){m.className='msg';m.textContent='The website has no saved content yet (server answered '+r.status+'). Press Save changes first.';return null}
+    var sv=norm(await r.json()),here=norm(JSON.parse(JSON.stringify(w))),d=diffs(here,sv);
+    if(d.length){m.className='msg';m.textContent='Not the same on the website: '+d.slice(0,12).join(', ')+(d.length>12?' and '+(d.length-12)+' more':'')+'. If you have not pressed Save yet, save first. If you already did, the server is not keeping these fields.'}
+    else m.textContent='The website has everything shown here.';
+    return d}
+  catch(e){m.className='msg';m.textContent='Could not reach the server.';return null}}
+$('ck').addEventListener('click',verify);
 
 function draw(){
   var e=$('ed');e.innerHTML='';
@@ -145,9 +199,9 @@ function draw(){
   g=group('Top section');g.append(fld('Headline',w,'heroTitle'),fld('Description',w,'heroText','textarea'));e.append(g);
   g=group('Contact');g.append(fld('Phone',w,'phone'),fld('Days open (e.g. Open every day)',w,'days'),fld('Hours (e.g. 10 am to 8 pm)',w,'hours'),fld('Address',w,'address','textarea'));e.append(g);
   w.social=w.social||{};g=group('Social media');g.append(urlFld('Facebook page link',w.social,'facebook'),urlFld('Instagram page link',w.social,'instagram'),urlFld('LinkedIn page link',w.social,'linkedin'));e.append(g);
-  e.append(listGroup('Services',w.services,[['Service name','n'],['Short line (shown on the card)','s'],['Full description (shown in the popup)','d','textarea'],['What is included (one per line)','l','lines'],['Category (makes the filter buttons, for example Hair or Skin)','c'],['Starting price in rupees (optional, numbers only)','p']],{n:'',s:'',d:'',l:[],c:'',p:''},'Add service','Service'));
+  e.append(listGroup('Services',w.services,[['Service name','n'],['Short line (shown on the card)','s'],['Full description (shown in the popup)','d','textarea'],['What is included (one per line)','l','lines'],['Category (makes the filter buttons, for example Hair or Skin. Buttons appear when there are 2 or more different categories)','c'],['Starting price in rupees (optional, numbers only. Empty shows "Call for price")','p','num']],{n:'',s:'',d:'',l:[],c:'',p:''},'Add service','Service'));
   e.append(listGroup('Booking steps',w.steps,[['Step title','t'],['Step text','d','textarea']],{t:'',d:''},'Add step','Step'));
-  e.append(listGroup('Reviews',w.reviews,[['Client name','n'],['Comment text','c','textarea'],['Stars (1-5)','r']],{n:'',c:'',r:'5'},'Add review','Review'));
+  e.append(listGroup('Reviews',w.reviews,[['Client name','n'],['Comment text','c','textarea'],['Stars (1-5)','r','num']],{n:'',c:'',r:'5'},'Add review','Review'));
 }
 })();
 </script>
