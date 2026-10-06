@@ -2,7 +2,7 @@
 const { kv } = require('@vercel/kv');
 
 module.exports = async (req, res) => {
-  // Setup safe connection rules for your front-end forms script
+  // Setup safe connection rules for your original admin.html scripts
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -13,15 +13,15 @@ module.exports = async (req, res) => {
 
   try {
     if (req.method === 'POST') {
-      // 1. Instantly save all your fields, beauty services, and reviews into Redis
+      // 1. Instantly write all your styled layout modifications straight into Redis storage
       await kv.set('arshhi_site_data', req.body);
       
-      // 2. Return a clean, successful status block matching what your admin.html checks for
+      // 2. Clear out response data properties to return a clean HTTP status code
       res.setHeader('Content-Type', 'application/json');
-      return res.status(200).json({ status: 200, success: true, ok: true });
+      return res.status(200).json({});
     }
   } catch (error) {
     res.setHeader('Content-Type', 'application/json');
-    return res.status(500).json({ status: 500, error: 'server', details: error.message });
+    return res.status(500).json({ error: 'server', details: error.message });
   }
 };
