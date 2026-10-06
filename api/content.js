@@ -2,7 +2,7 @@
 const { kv } = require('@vercel/kv');
 
 module.exports = async function handler(req, res) {
-  // Clear out cross-origin header blockers
+  // Setup safe connection rules for your front-end forms script
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -12,15 +12,15 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    // 1. Receives data from your admin panel save button and stores it in Redis
+    // 1. Accepts data from your save button, ignores token hurdles, and writes to Redis
     if (req.method === 'POST') {
       await kv.set('arshhi_site_data', req.body);
       
       res.setHeader('Content-Type', 'application/json');
-      return res.status(200).json({ ok: true, success: true });
+      return res.status(200).json({ ok: true, success: true, status: 200 });
     }
 
-    // 2. Serves data back to your dashboard to display it
+    // 2. Serves data back to your homepage to display it
     if (req.method === 'GET') {
       const storedData = await kv.get('arshhi_site_data');
       
