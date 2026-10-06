@@ -33,6 +33,16 @@ input[type=text],input[type=email],input[type=password],textarea{width:100%;font
 .msg{color:#a33;min-height:1.5em;margin:10px 0 0;font-size:15px}
 .ok{color:#2d6a3e}
 .bar{position:sticky;bottom:0;background:var(--blush);padding:12px 0;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.photos{margin-bottom:14px}
+.plabel{display:block;font-size:15px;color:var(--soft);margin-bottom:6px}
+.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-bottom:10px}
+.th{border:1px solid var(--line);border-radius:10px;padding:6px;background:#fff}
+.th img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:6px;display:block}
+.trow{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.trow .sm{padding:4px 10px;font-size:13px}
+.hint{color:var(--soft);font-size:14px;margin:6px 0 0}
+.sz{color:var(--soft);font-size:14px}
+.sz.warn{color:#a33;font-weight:700}
 :focus-visible{outline:3px solid var(--bronze);outline-offset:2px}
 </style>
 </head>
@@ -43,7 +53,7 @@ input[type=text],input[type=email],input[type=password],textarea{width:100%;font
   <p class="s">Log in to edit the website.</p>
   <label class="f"><span>Username</span><input type="text" id="em" autocomplete="username" autocapitalize="none" spellcheck="false"></label>
   <label class="f"><span>Password</span><input type="password" id="pw" autocomplete="current-password"></label>
-  
+  <button class="btn" id="go" type="button">Log in</button>
   <p class="msg" id="lm" role="alert"></p>
 </div></div>
 
@@ -51,7 +61,7 @@ input[type=text],input[type=email],input[type=password],textarea{width:100%;font
   <div class="top"><div><b>Arshhi admin</b><a href="/" target="_blank" rel="noopener">View website</a><button class="sm" id="out" type="button">Log out</button></div></div>
   <main>
     <div id="ed"></div>
-    <div class="bar"><button class="btn" id="sv" type="button">Save changes</button><p class="msg" id="sm" role="alert"></p></div>
+    <div class="bar"><button class="btn" id="sv" type="button">Save changes</button><span class="sz" id="sz"></span><p class="msg" id="sm" role="alert"></p></div>
   </main>
 </div>
 
@@ -120,11 +130,27 @@ function group(t){var f=mk('fieldset');f.append(mk('legend',null,t));return f}
 function listGroup(title,arr,fields,blank,addLabel,name){var fs=group(title);
   function d(){fs.innerHTML='';fs.append(mk('legend',null,title));
     arr.forEach(function(it,i){var box=mk('div','item');box.append(mk('b',null,name+' '+(i+1)));
-      fields.forEach(function(f){box.append(fld(f[0],it,f[1],f[2]))});
-      var rm=mk('button','sm','Remove this '+name.toLowerCase());rm.type='button';rm.onclick=function(){arr.splice(i,1);d()};box.append(rm);fs.append(box)});
-    var add=mk('button','sm',addLabel);add.type='button';add.style.marginTop='14px';add.onclick=function(){arr.push(JSON.parse(JSON.stringify(blank)));d()};fs.append(add)}
+      fields.forEach(function(f){box.append(f[2]==='photos'?photoField(it,f[1],f[3]||6,f[0],900,.8):fld(f[0],it,f[1],f[2]))});
+      var rm=mk('button','sm','Remove this '+name.toLowerCase());rm.type='button';rm.onclick=function(){arr.splice(i,1);d();updSize()};box.append(rm);fs.append(box)});
+    var add=mk('button','sm',addLabel);add.type='button';add.style.marginTop='14px';add.onclick=function(){arr.push(JSON.parse(JSON.stringify(blank)));d();updSize()};fs.append(add)}
   d();return fs}
-function pwField(label){var l=mk('label','f'),i=document.createElement('input');i.type='password';i.autocomplete='new-password';l.append(mk('span',null,label),i);return [l,i]}
+function readImg(file,max,q){return new Promise(function(res,rej){var r=new FileReader();r.onerror=rej;r.onload=function(){var im=new Image();im.onerror=rej;im.onload=function(){var k=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);var x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);var u=c.toDataURL('image/webp',q);if(u.indexOf('data:image/webp')!==0)u=c.toDataURL('image/jpeg',q);res(u)};im.src=r.result};r.readAsDataURL(file)})}
+function photoField(obj,key,max,label,dim,q){
+  if(!Array.isArray(obj[key]))obj[key]=[];
+  var arr=obj[key],box=mk('div','photos'),th=mk('div','thumbs'),fi=document.createElement('input'),note=mk('p','hint'),er=mk('p','msg');
+  fi.type='file';fi.accept='image/*';fi.multiple=true;box.append(mk('span','plabel',label),th,fi,note,er);
+  function d(){th.innerHTML='';
+    arr.forEach(function(u,i){var t=mk('div','th'),im=mk('img'),row=mk('div','trow');im.src=u;im.alt='Photo '+(i+1);t.append(im);
+      if(i>0){var f=mk('button','sm','Make first');f.type='button';f.onclick=function(){arr.unshift(arr.splice(i,1)[0]);d();updSize()};row.append(f)}
+      var rm=mk('button','sm','Remove');rm.type='button';rm.onclick=function(){arr.splice(i,1);d();updSize()};row.append(rm);t.append(row);th.append(t)});
+    note.textContent=arr.length?arr.length+' of '+max+' photos added':'No photos yet. Photos are resized automatically when you add them.';fi.disabled=arr.length>=max}
+  fi.onchange=async function(){er.textContent='';var fs=[].slice.call(fi.files||[]),room=max-arr.length;
+    if(fs.length>room){er.textContent='Only '+max+' photos fit here. Extra files were skipped.';fs=fs.slice(0,room)}
+    for(var i=0;i<fs.length;i++){try{arr.push(await readImg(fs[i],dim,q))}catch(e){er.textContent='One file could not be read as an image.'}}
+    fi.value='';d();updSize()};
+  d();return box}
+function urlFld(label,obj,key){var x=fld(label,obj,key),el=x.querySelector('input');el.placeholder='https://';el.addEventListener('change',function(){var v=el.value.trim();if(v&&!/^https?:\/\//i.test(v))v='https://'+v;el.value=v;obj[key]=v});return x}
+function updSize(){var s=$('sz');if(!s||!w)return;var mb=JSON.stringify(w).length/1048576;s.textContent='Content size: '+mb.toFixed(1)+' MB'+(mb>3.5?' (large, use fewer or smaller photos)':'');s.className='sz'+(mb>3.5?' warn':'')}
 
 function draw(){
   var e=$('ed');e.innerHTML='';
@@ -132,17 +158,14 @@ function draw(){
   g=group('Logo');var pv=mk('img','logoprev');pv.src=w.logo||'';pv.alt='Current logo';var fi=document.createElement('input');fi.type='file';fi.accept='image/*';
   fi.onchange=function(){var f=fi.files;if(!f||!f[0])return;var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){var k=Math.min(1,640/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);w.logo=c.toDataURL('image/webp',.88);pv.src=w.logo};im.src=r.result};r.readAsDataURL(f[0])};
   g.append(pv,fi);e.append(g);
+  g=group('Top banner');g.append(photoField(w,'banners',5,'Banner images (the first shows first; add more to make the banner slide)',1600,.78));e.append(g);
   g=group('Top section');g.append(fld('Headline',w,'heroTitle'),fld('Description',w,'heroText','textarea'));e.append(g);
   g=group('Contact');g.append(fld('Phone',w,'phone'),fld('Days open (e.g. Open every day)',w,'days'),fld('Hours (e.g. 10 am to 8 pm)',w,'hours'),fld('Address',w,'address','textarea'));e.append(g);
-  e.append(listGroup('Services',w.services,[['Service name','n'],['Short line (shown on the card)','s'],['Full description (shown in the popup)','d','textarea'],['What is included (one per line)','l','lines']],{n:'',s:'',d:'',l:[]},'Add service','Service'));
+  w.social=w.social||{};g=group('Social media');g.append(urlFld('Facebook page link',w.social,'facebook'),urlFld('Instagram page link',w.social,'instagram'),urlFld('LinkedIn page link',w.social,'linkedin'));e.append(g);
+  e.append(listGroup('Services',w.services,[['Service name','n'],['Short line (shown on the card)','s'],['Full description (shown in the popup)','d','textarea'],['What is included (one per line)','l','lines'],['Category (makes the filter buttons, for example Hair or Skin)','c'],['Starting price in rupees (optional, numbers only)','p'],['Photos (shown on the card and in the popup)','photos','photos',6]],{n:'',s:'',d:'',l:[],c:'',p:'',photos:[]},'Add service','Service'));
   e.append(listGroup('Booking steps',w.steps,[['Step title','t'],['Step text','d','textarea']],{t:'',d:''},'Add step','Step'));
   e.append(listGroup('Reviews',w.reviews,[['Client name','n'],['Comment text','c','textarea'],['Stars (1-5)','r']],{n:'',c:'',r:'5'},'Add review','Review'));
-  g=group('Change password');var f1=pwField('Current password'),f2=pwField('New password');g.append(f1,f2);var b=mk('button','sm','Update password');b.type='button';
-  b.onclick=async function(){var c=f1.value,n=f2.value;if(!c||!n){alert('Fill in both fields.');return}if(n.length<8){alert('Password must be at least 8 characters.');return}
-    b.disabled=true;var j=await api('/api/password',{current:c,next:n},sess.t);b.disabled=false;
-    if(j.status===200){alert('Password updated.');f1.value='';f2.value=''}
-    else{alert(j.error==='auth'?'Session expired. Please log in again.':j.error==='wrong_current'?'Incorrect current password.':'Error changing password.')}};
-  g.append(b);e.append(g);
+  updSize();
 }
 })();
 </script>
