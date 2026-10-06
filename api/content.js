@@ -1,8 +1,8 @@
 // api/content.js
 const { kv } = require('@vercel/kv');
-const { json } = require('./_lib');
 
 module.exports = async function handler(req, res) {
+  // Clear out cross-origin header blockers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -12,16 +12,23 @@ module.exports = async function handler(req, res) {
   }
 
   try {
+    // 1. Receives data from your admin panel save button and stores it in Redis
     if (req.method === 'POST') {
       await kv.set('arshhi_site_data', req.body);
-      return json(res, 200, { success: true });
+      
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(200).json({ ok: true, success: true });
     }
 
+    // 2. Serves data back to your dashboard to display it
     if (req.method === 'GET') {
       const storedData = await kv.get('arshhi_site_data');
-      return json(res, 200, storedData || {});
+      
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(200).json(storedData || {});
     }
   } catch (error) {
-    return json(res, 500, { error: error.message });
+    res.setHeader('Content-Type', 'application/json');
+    return res.status(500).json({ error: 'server', details: error.message });
   }
 };
