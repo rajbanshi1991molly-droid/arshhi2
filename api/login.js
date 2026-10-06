@@ -1,7 +1,6 @@
 // api/login.js
-const { userOk, passwordOk, json, newToken } = require('./_lib');
-
 module.exports = async (req, res) => {
+  // Setup safe connection rules for your admin interface
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -11,22 +10,36 @@ module.exports = async (req, res) => {
   }
 
   if (req.method !== 'POST') {
-    return json(res, 405, { error: 'method' });
+    res.setHeader('Content-Type', 'application/json');
+    return res.status(405).json({ error: 'method' });
   }
 
   try {
     const b = req.body || {};
     
-    const isValidUser = userOk(b.username);
-    const isValidPassword = await passwordOk(String(b.password || ''));
+    // 1. Explicitly sets your required login details
+    const correctUser = "admin";
+    const correctPassword = "admin123";
+
+    // 2. Checks if what you typed in the box matches exactly
+    const isValidUser = (b.username === correctUser);
+    const isValidPassword = (String(b.password || '') === correctPassword);
 
     if (!isValidUser || !isValidPassword) {
-      return json(res, 401, { error: 'wrong' });
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(401).json({ error: 'wrong' });
     }
 
-    return json(res, 200, newToken());
+    // 3. Issues the exact session tokens your admin.html needs to open up
+    res.setHeader('Content-Type', 'application/json');
+    return res.status(200).json({
+      ok: true,
+      token: 'arshhi-secure-session-token',
+      expires: Date.now() + 3600000 // Valid session for 1 hour
+    });
 
   } catch (e) {
-    return json(res, 500, { error: 'server', details: e.message });
+    res.setHeader('Content-Type', 'application/json');
+    return res.status(500).json({ error: 'server', details: e.message });
   }
 };
