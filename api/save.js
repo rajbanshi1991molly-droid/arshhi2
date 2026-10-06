@@ -2,7 +2,7 @@
 const { kv } = require('@vercel/kv');
 
 module.exports = async (req, res) => {
-  // Setup safe connection rules for your original admin.html scripts
+  //Set up safe connection rules for your original admin.html scripts
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
