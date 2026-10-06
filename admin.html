@@ -61,7 +61,8 @@ input[type=text],input[type=email],input[type=password],textarea{width:100%;font
   <div class="top"><div><b>Arshhi admin</b><a href="/" target="_blank" rel="noopener">View website</a><button class="sm" id="out" type="button">Log out</button></div></div>
   <main>
     <div id="ed"></div>
-    <div class="bar"><button class="btn" id="sv" type="button">Save changes</button><span class="sz" id="sz"></span><p class="msg" id="sm" role="alert"></p></div>
+    <div class="bar"><button class="btn" id="sv" type="button">Save changes</button><button class="sm" id="ck" type="button">Check what the website has</button><span class="sz" id="sz"></span><p class="msg" id="sm" role="alert"></p></div>
+    <p class="msg" id="ckm" role="status"></p>
   </main>
 </div>
 
@@ -152,6 +153,15 @@ function photoField(obj,key,max,label,dim,q){
 function urlFld(label,obj,key){var x=fld(label,obj,key),el=x.querySelector('input');el.placeholder='https://';el.addEventListener('change',function(){var v=el.value.trim();if(v&&!/^https?:\/\//i.test(v))v='https://'+v;el.value=v;obj[key]=v});return x}
 function updSize(){var s=$('sz');if(!s||!w)return;var mb=JSON.stringify(w).length/1048576;s.textContent='Content size: '+mb.toFixed(1)+' MB'+(mb>3.5?' (large, use fewer or smaller photos)':'');s.className='sz'+(mb>3.5?' warn':'')}
 
+function stats(o){var ph=0,c=0,p=0;(o.services||[]).forEach(function(s){ph+=(Array.isArray(s.photos)?s.photos.length:0);if(String(s.c||'').trim())c++;if(String(s.p||'').trim())p++});var so=o.social||{};return{banners:(o.banners||[]).length,photos:ph,cats:c,prices:p,social:['facebook','instagram','linkedin'].filter(function(k){return so[k]}).length}}
+$('ck').addEventListener('click',async function(){var m=$('ckm');if(!w)return;m.className='msg ok';m.textContent='Checking...';
+  try{var r=await fetch('/api/content',{cache:'no-store'});
+    if(!r.ok){m.className='msg';m.textContent='The website has no saved content yet (server answered '+r.status+'). Press Save changes first.';return}
+    var sv=await r.json(),a=stats(w),b=stats(sv),nm={banners:'banner images',photos:'service photos',cats:'categories',prices:'prices',social:'social links'},d=[];
+    Object.keys(a).forEach(function(k){if(a[k]!==b[k])d.push(nm[k]+': '+a[k]+' here, '+b[k]+' on the website')});
+    if(d.length){m.className='msg';m.textContent='Not the same on the website. '+d.join('; ')+'. If you have not pressed Save yet, save first. If you already did, the server is not keeping these fields or the content is too large.'}
+    else m.textContent='The website has everything shown here.'}
+  catch(e){m.className='msg';m.textContent='Could not reach the server.'}});
 function draw(){
   var e=$('ed');e.innerHTML='';
   var g=group('Business');g.append(fld('Business name',w,'brand'),fld('Tagline (shown in footer)',w,'tagline'));e.append(g);
