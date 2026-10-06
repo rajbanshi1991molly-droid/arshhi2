@@ -79,26 +79,9 @@ h2::after{content:"";display:block;width:64px;height:3px;background:linear-gradi
 .fbtn{margin-top:16px;background:none;border:0;padding:0;font:inherit;font-weight:500;color:var(--bronze);cursor:pointer;min-height:44px;display:block;background-image:linear-gradient(var(--rose),var(--rose));background-size:100% 2px;background-position:0 100%;background-repeat:no-repeat;width:max-content;transition:background-size .4s var(--ease),color .3s}
 .fbtn:hover{background-size:0 2px;color:var(--bronze-d)}
 
-/* hero banner (image slots filled from admin) */
 .hero{min-height:clamp(430px,64vh,580px);display:flex;flex-direction:column;justify-content:center}
+.hero{min-height:clamp(340px,50vh,460px);display:flex;flex-direction:column;justify-content:center}
 .hero>.wrap{width:100%}
-.bn{position:absolute;inset:0;z-index:0}
-.bs{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.06);transition:opacity 1.2s ease,transform 7s linear}
-.bs.on{opacity:1;transform:scale(1)}
-.bov{position:absolute;inset:0;background:linear-gradient(90deg,rgba(30,18,12,.78) 0%,rgba(30,18,12,.5) 50%,rgba(30,18,12,.12) 100%)}
-.bdots{position:absolute;left:0;right:0;bottom:16px;display:flex;justify-content:center;gap:8px;z-index:2}
-.bdots button{all:unset;box-sizing:border-box;width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.55);cursor:pointer;transition:width .45s var(--ease),background .3s}
-.bdots button.on{width:30px;border-radius:999px;background:#fff}
-.bdots button:focus-visible{outline:3px solid #fff;outline-offset:3px}
-.hero.hasimg::before,.hero.hasimg::after{display:none}
-.hero.hasimg h1,.hero.hasimg p{color:#fff}
-.hero.hasimg p{opacity:.92}
-.hero.hasimg .fbtn{color:#fff;background-image:linear-gradient(#fff,#fff)}
-.hero.hasimg .btn.alt{color:#fff;border-color:#fff}
-.hero.hasimg .btn.alt::before{background:#fff}
-.hero.hasimg .btn.alt:hover{color:var(--bronze-d)}
-.hero.hasimg .rh,.hero.hasimg .reviews{position:relative;z-index:1}
-.hero:not(.hasimg) .bn{display:none}
 .facts{background:var(--bg);border-bottom:1px solid var(--line)}
 .facts .wrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0;padding-top:22px;padding-bottom:22px;color:var(--soft);font-size:16px;text-align:center}
 .facts .wrap>div{padding:6px 16px;border-left:1px solid var(--line)}
@@ -116,18 +99,12 @@ h2::after{content:"";display:block;width:64px;height:3px;background:linear-gradi
 .services li{display:block}
 .services li[hidden]{display:none}
 .services li.pop{animation:pop .55s var(--ease) both}
-.card{display:flex;flex-direction:column;height:100%;background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;transition:transform .5s var(--ease),box-shadow .5s var(--ease),border-color .4s}
+.card{position:relative;display:flex;flex-direction:column;height:100%;background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;transition:transform .5s var(--ease),box-shadow .5s var(--ease),border-color .4s}
 .card:hover{transform:translateY(-6px);box-shadow:var(--shadow);border-color:var(--rose)}
 .card.sel{border-color:var(--bronze);box-shadow:0 0 0 2px var(--bronze)}
-.svc{all:unset;box-sizing:border-box;cursor:pointer;display:block}
-.svc:focus-visible{outline:3px solid var(--bronze);outline-offset:3px}
-.ph{position:relative;display:block;width:100%;aspect-ratio:4/3;overflow:hidden;background:linear-gradient(135deg,var(--blush),#f3d3cd)}
-.ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform 1s var(--ease)}
-.card:hover .ph img{transform:scale(1.07)}
-.ph .blank{position:absolute;inset:0;display:grid;place-items:center;color:var(--bronze);opacity:.45}
-.ph .blank svg{width:44px;height:44px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
-.ph .cnt{position:absolute;right:10px;bottom:10px;background:rgba(32,20,14,.7);color:#fff;font-size:12px;font-weight:500;padding:3px 10px;border-radius:999px}
-.cb{display:flex;flex-direction:column;gap:6px;padding:18px 18px 18px;flex:1}
+.card::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:linear-gradient(90deg,var(--bronze),var(--rose));transform:scaleX(.18);transform-origin:left;transition:transform .7s var(--ease)}
+.card:hover::before,.card.sel::before{transform:scaleX(1)}
+.cb{display:flex;flex-direction:column;gap:6px;padding:26px 22px 22px;flex:1}
 .tag{align-self:flex-start;font-size:13px;color:var(--bronze);background:var(--blush);border-radius:999px;padding:2px 12px}
 .card h3{font-size:26px;color:var(--ink)}
 .price{margin:0;font-weight:600;color:var(--bronze)}
@@ -281,18 +258,6 @@ footer{background:var(--blush);border-top:1px solid var(--line);padding:64px 0 9
 #mList li{opacity:0;transform:translateX(-14px);animation:slideLeft .6s var(--ease) forwards}
 @keyframes slideLeft{to{opacity:1;transform:none}}
 body.lock{overflow:hidden}
-.gal{position:relative;background:var(--blush)}
-.gal[hidden]{display:none}
-.gtrack{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;scroll-behavior:smooth}
-.gtrack::-webkit-scrollbar{display:none}
-.gtrack img{flex:0 0 100%;width:100%;aspect-ratio:4/3;object-fit:cover;scroll-snap-align:center;display:block}
-.gnav{position:absolute;top:50%;transform:translateY(-50%);width:42px;height:42px;border-radius:50%;border:0;background:rgba(255,255,255,.9);color:#3b2a20;font-size:22px;line-height:1;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.25);transition:transform .35s var(--ease),background .3s}
-.gnav:hover{transform:translateY(-50%) scale(1.1);background:#fff}
-.gnav.p{left:12px}.gnav.n{right:12px}
-.gdots{position:absolute;left:0;right:0;bottom:12px;display:flex;justify-content:center;gap:7px}
-.gdots i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.6);transition:width .4s var(--ease),background .3s}
-.gdots i.on{width:24px;border-radius:999px;background:#fff}
-.gal.one .gnav,.gal.one .gdots{display:none}
 
 /* forms + feedback */
 .f{display:block;margin-bottom:12px}
@@ -339,7 +304,6 @@ body.lock{overflow:hidden}
 html{scroll-behavior:auto}
 *,*::before,*::after{animation:none!important;transition-duration:.01ms!important;transition-delay:0s!important}
 .rv{opacity:1;transform:none}
-.gtrack{scroll-behavior:auto}
 #mList li{opacity:1;transform:none}
 .how li::after{transform:scaleX(1)}
 }
@@ -366,20 +330,14 @@ function cat(s){return String(s.c||s.category||'').trim()}
 function pr(s){var v=s.p!=null?s.p:s.price;return v==null?'':String(v).replace(/^\s*(\u20B9|rs\.?|inr)\s*/i,'').trim()}
 function head(d){return '<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>'+esc(d.brand)+' \u2013 Door to door beauty care</title><meta name="description" content="'+esc(d.brand)+' brings beauty care services to your home in Kolkata, West Bengal.">'}
 
-/* Service photos: reads services[i].photos (array of image addresses). Also accepts images, gallery, imgs, photo, img, image. */
-function photos(s){var a=[];['photos','images','gallery','imgs'].forEach(function(k){if(Array.isArray(s[k]))a=a.concat(s[k])});['photo','img','image'].forEach(function(k){if(s[k])a.push(s[k])});
-return a.map(function(x){return su(typeof x==='string'?x:(x&&(x.url||x.src)))}).filter(Boolean)}
-function banners(d){var a=[];['banners','banner','heroImages','heroImage','hero_image'].forEach(function(k){var v=d[k];if(Array.isArray(v))a=a.concat(v);else if(v)a.push(v)});return a.map(function(x){return su(typeof x==='string'?x:(x&&(x.url||x.src)))}).filter(Boolean)}
 function social(d){var s=d.social||{};return{facebook:su(s.facebook||d.facebook)||SOCIAL.facebook,instagram:su(s.instagram||d.instagram)||SOCIAL.instagram,linkedin:su(s.linkedin||d.linkedin)||SOCIAL.linkedin}}
 
 function render(d){
-var bi=banners(d),tel='tel:+'+dg(d.phone),wa='https://wa.me/'+dg(d.phone)+'?text='+encodeURIComponent('Hello '+d.brand+', I would like to book a service.'),when=esc(d.days)+', '+esc(d.hours),so=social(d),anySo=!!(so.facebook||so.instagram||so.linkedin);
+var tel='tel:+'+dg(d.phone),wa='https://wa.me/'+dg(d.phone)+'?text='+encodeURIComponent('Hello '+d.brand+', I would like to book a service.'),when=esc(d.days)+', '+esc(d.hours),so=social(d),anySo=!!(so.facebook||so.instagram||so.linkedin);
 var cats=[];d.services.forEach(function(x){var c=cat(x);if(c&&cats.indexOf(c)<0)cats.push(c)});
 var flt=cats.length>1?'<div class="filters" role="group" aria-label="Filter services"><button type="button" class="chip" data-f="" aria-pressed="true">All</button>'+cats.map(function(c){return '<button type="button" class="chip" data-f="'+esc(c)+'" aria-pressed="false">'+esc(c)+'</button>'}).join('')+'</div>':'';
-var BLANK='<span class="blank" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5-5-8 8"/></svg></span>';
-var svc=d.services.map(function(s,i){var p=photos(s),c=cat(s),pr_=pr(s);
-var pic=p.length?'<img src="'+esc(p[0])+'" alt="'+esc(s.n)+'" loading="lazy" decoding="async">'+(p.length>1?'<span class="cnt">'+p.length+' photos</span>':''):BLANK;
-return '<li class="rv" data-c="'+esc(c)+'" style="--d:'+(i%4*80)+'ms"><div class="card"><button type="button" class="svc" data-i="'+i+'" aria-label="View details of '+esc(s.n)+'"><span class="ph">'+pic+'</span></button><div class="cb">'+(c?'<span class="tag">'+esc(c)+'</span>':'')+'<h3>'+esc(s.n)+'</h3><p class="price">'+(pr_?'Start: \u20B9'+esc(pr_):'Call for price')+'</p><p class="sum">'+esc(s.s)+'</p><div class="acts"><button type="button" class="btn alt vd" data-i="'+i+'">View details</button><button type="button" class="btn main add" data-i="'+i+'" aria-pressed="false">Add</button></div></div></div></li>'}).join('');
+var svc=d.services.map(function(s,i){var c=cat(s),pr_=pr(s);
+return '<li class="rv" data-c="'+esc(c)+'" style="--d:'+(i%4*80)+'ms"><div class="card"><div class="cb">'+(c?'<span class="tag">'+esc(c)+'</span>':'')+'<h3>'+esc(s.n)+'</h3><p class="price">'+(pr_?'Start: \u20B9'+esc(pr_):'Call for price')+'</p><p class="sum">'+esc(s.s)+'</p><div class="acts"><button type="button" class="btn alt vd" data-i="'+i+'">View details</button><button type="button" class="btn main add" data-i="'+i+'" aria-pressed="false">Add</button></div></div></div></li>'}).join('');
 var why=[['We come to you','Your service is done at home in Kolkata, so there is no travel and no waiting room.'],[d.days,'Appointments are between '+d.hours+'. We agree a slot that suits you.'],['Combine services','Pick one service or a few. Add them to your list and send them to us together.']].map(function(x){return '<div><b>'+esc(x[0])+'</b><span>'+esc(x[1])+'</span></div>'}).join('');
 var guide=d.services.map(function(s,i){return '<article class="rv" style="--d:'+(i%2*100)+'ms"><h3>'+(i+1)+'. '+esc(s.n)+' at home</h3><p>'+esc(s.d)+'</p>'+((s.l||[]).length?'<ul>'+s.l.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul>':'')+'</article>'}).join('');
 var names=d.services.map(function(s){return s.n}).filter(function(n){return String(n).toLowerCase()!=='and more'}).join(', ');
@@ -391,10 +349,10 @@ var sl=function(k){return !so[k]?'':'<a href="'+esc(so[k])+'" target="_blank" re
 var fs=function(k){return !so[k]?'':'<a class="sico" href="'+esc(so[k])+'" target="_blank" rel="noopener noreferrer" aria-label="'+NAME[k]+'">'+ICON[k]+'</a>'};
 return `<div class="topbar"><div class="wrap"><span>${when}</span><a href="${tel}">Call ${esc(d.phone)}</a></div></div>
 <nav class="nav" aria-label="Main"><div class="wrap"><a class="brand" href="#top">${esc(d.brand)}</a><ul><li><a href="#services">Services</a></li><li><a href="#how">Booking</a></li><li class="opt"><a href="#faq">FAQ</a></li><li><a href="#contact">Contact</a></li><li class="cta"><a class="btn main" href="${tel}">Call now</a></li></ul></div></nav>
-<header class="hero${bi.length?' hasimg':''}" id="top">${bi.length?'<div class="bn" id="bn" aria-hidden="true">'+bi.map(function(u,i){return '<img class="bs'+(i?'':' on')+'" src="'+esc(u)+'" alt="" decoding="async"'+(i?' loading="lazy"':'')+'>'}).join('')+'<div class="bov"></div></div>'+(bi.length>1?'<div class="bdots" id="bdots">'+bi.map(function(u,i){return '<button type="button" aria-label="Show banner '+(i+1)+'"'+(i?'':' class="on"')+'></button>'}).join('')+'</div>':''):''}<div class="wrap hero-grid"><div class="plate"><img src="${esc(su(d.logo))}" alt="${esc(d.brand)}" width="640" height="520"></div><div class="hero-text"><h1>${esc(d.heroTitle)}</h1><p>${esc(d.heroText)}</p><div class="btns"><a class="btn main" href="${tel}">Call ${esc(d.phone)}</a><a class="btn alt" href="${wa}" rel="noopener">Book on WhatsApp</a></div><button type="button" class="fbtn" id="fbOpen">Share your feedback</button></div></div>${rev}</header>
+<header class="hero" id="top"><div class="wrap hero-grid"><div class="plate"><img src="${esc(su(d.logo))}" alt="${esc(d.brand)}" width="640" height="520"></div><div class="hero-text"><h1>${esc(d.heroTitle)}</h1><p>${esc(d.heroText)}</p><div class="btns"><a class="btn main" href="${tel}">Call ${esc(d.phone)}</a><a class="btn alt" href="${wa}" rel="noopener">Book on WhatsApp</a></div><button type="button" class="fbtn" id="fbOpen">Share your feedback</button></div></div>${rev}</header>
 <div class="facts"><div class="wrap"><div><b>At your home</b><br>We come to you</div><div><b>${esc(d.days)}</b><br>${esc(d.hours)}</div><div><b>Kolkata</b><br>West Bengal</div></div></div>
 <main>
-<section class="services" id="services"><div class="wrap"><h2 class="rv">Book your service at home</h2><p class="lead rv">Choose a service, tap Add to build your list, or open View details to see photos and what is included.</p>${flt}<ul id="svcList">${svc}</ul></div></section>
+<section class="services" id="services"><div class="wrap"><h2 class="rv">Book your service at home</h2><p class="lead rv">Choose a service, tap Add to build your list, or open View details to see what is included.</p>${flt}<ul id="svcList">${svc}</ul></div></section>
 <section class="intro" id="about"><div class="wrap introg"><div class="rv"><h2>Beauty care at your home in Kolkata</h2><p>${esc(d.heroText)}</p><p>${esc(d.tagline)} Pick one service or combine a few in the same visit, and we agree a time between ${esc(d.hours)}.</p></div><div class="why rv" style="--d:140ms">${why}</div></div></section>
 <section class="guide" id="guide"><div class="wrap"><h2 class="rv">Our services in detail</h2><p class="lead rv">What each service includes, so you know what to expect at home.</p><div class="gl">${guide}</div></div></section>
 <section class="how" id="how"><div class="wrap"><h2 class="rv">How booking works</h2><p class="lead rv">No travel, no waiting room.</p><ol>${stp}</ol></div></section>
@@ -405,13 +363,13 @@ return `<div class="topbar"><div class="wrap"><span>${when}</span><a href="${tel
 ${anySo?`<aside class="social" id="social" aria-label="Social media"><button type="button" class="stab" id="sTab" aria-expanded="false" aria-controls="sLinks" aria-label="Follow us on social media"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><div class="slinks" id="sLinks">${sl('facebook')}${sl('instagram')}${sl('linkedin')}</div></aside>`:''}
 <div class="cart" id="cart" role="region" aria-label="Selected services"><div class="ci"><b id="cN"></b><small id="cL"></small></div><span class="tot" id="cT" hidden></span><button type="button" class="clr" id="cC">Clear</button><a class="btn main" id="cW" href="#" rel="noopener">Book on WhatsApp</a></div>
 <div class="dock"><a class="btn main" href="${tel}">Call</a><a class="btn alt" href="${wa}" rel="noopener">WhatsApp</a></div>
-<dialog class="modal" id="svcModal" aria-labelledby="mTitle"><button type="button" class="x" id="mClose" aria-label="Close">&times;</button><div class="gal" id="mGal" hidden><div class="gtrack" id="gT"></div><button type="button" class="gnav p" id="gP" aria-label="Previous photo">&#8249;</button><button type="button" class="gnav n" id="gN" aria-label="Next photo">&#8250;</button><div class="gdots" id="gD"></div></div><div class="mbody"><h3 id="mTitle"></h3><p class="price" id="mP"></p><p id="mDesc"></p><h4>What's included</h4><ul id="mList"></ul><p class="note">Call or message us to ask about price and timing.</p><div class="btns"><a class="btn main" href="${tel}">Call now</a><a class="btn alt" id="mWa" href="#" rel="noopener">Book on WhatsApp</a></div></div></dialog>
+<dialog class="modal" id="svcModal" aria-labelledby="mTitle"><button type="button" class="x" id="mClose" aria-label="Close">&times;</button><div class="mbody"><h3 id="mTitle"></h3><p class="price" id="mP"></p><p id="mDesc"></p><h4>What's included</h4><ul id="mList"></ul><p class="note">Call or message us to ask about price and timing.</p><div class="btns"><a class="btn main" href="${tel}">Call now</a><a class="btn alt" id="mWa" href="#" rel="noopener">Book on WhatsApp</a></div></div></dialog>
 <dialog class="modal" id="fbModal" aria-labelledby="fbT"><button type="button" class="x" id="fbClose" aria-label="Close">&times;</button><div class="mbody"><h3 id="fbT">Share your feedback</h3><p>Tell us about your visit. Your message opens in WhatsApp and reaches us when you press send.</p><div class="rate" role="group" aria-label="Rating"><button type="button" aria-label="1 star" aria-pressed="false">★</button><button type="button" aria-label="2 stars" aria-pressed="false">★</button><button type="button" aria-label="3 stars" aria-pressed="false">★</button><button type="button" aria-label="4 stars" aria-pressed="false">★</button><button type="button" aria-label="5 stars" aria-pressed="false">★</button></div><label class="f"><span>Your name (optional)</span><input id="fbName" type="text" autocomplete="name"></label><label class="f"><span>Your feedback</span><textarea id="fbText" rows="4"></textarea></label><a class="btn main" id="fbSend" href="#" target="_blank" rel="noopener">Send on WhatsApp</a><span id="fbMsg" role="status"></span></div></dialog>
 `}
 
 var m,last,fb,rate=0,stars,painted=false;
 
-/* open a service: fills text + photo gallery */
+/* open a service: fills the details window */
 var sel=[];
 function waList(){return 'https://wa.me/'+dg(data.phone)+'?text='+encodeURIComponent('Hello '+data.brand+', I would like to book: '+sel.map(function(i){return data.services[i].n}).join(', '))}
 function updateCart(){var c=$('cart');if(!c)return;sel=sel.filter(function(i){return data.services[i]});
@@ -427,29 +385,17 @@ root.addEventListener('click',function(e){
 var ad=e.target.closest&&e.target.closest('.add');if(ad){var i=+ad.dataset.i,k=sel.indexOf(i);if(k>-1)sel.splice(k,1);else sel.push(i);updateCart();return}
 var ch=e.target.closest&&e.target.closest('.chip');if(ch){root.querySelectorAll('.chip').forEach(function(x){x.setAttribute('aria-pressed',x===ch?'true':'false')});applyFilter(ch.dataset.f);return}
 if(e.target.closest&&e.target.closest('#cC')){sel=[];updateCart();return}
-var b=e.target.closest&&e.target.closest('.svc,.vd');if(!b)return;var s=data.services[+b.dataset.i];last=b;
+var b=e.target.closest&&e.target.closest('.vd');if(!b)return;var s=data.services[+b.dataset.i];last=b;
 var P=pr(s);$('mP').textContent=P?'Start: \u20B9'+P:'';$('mP').hidden=!P;
 $('mTitle').textContent=s.n;$('mDesc').textContent=s.d;
 var L=$('mList');L.innerHTML='';(s.l||[]).forEach(function(x,i){var li=document.createElement('li');li.textContent=x;li.style.animationDelay=(.25+i*.08)+'s';L.appendChild(li)});
 $('mWa').href='https://wa.me/'+dg(data.phone)+'?text='+encodeURIComponent('Hello '+data.brand+', I would like to book: '+s.n);
-var p=photos(s),G=$('mGal'),T=$('gT'),D=$('gD');G.hidden=!p.length;G.classList.toggle('one',p.length<2);T.innerHTML='';D.innerHTML='';
-p.forEach(function(u,i){var im=document.createElement('img');im.src=u;im.alt=s.n+' photo '+(i+1);im.decoding='async';T.appendChild(im);var d=document.createElement('i');if(!i)d.className='on';D.appendChild(d)});
-T.style.scrollBehavior='auto';T.scrollLeft=0;requestAnimationFrame(function(){T.style.scrollBehavior=''});
 m.showModal();document.body.classList.add('lock')});
 
-var bt;
-function slider(){clearInterval(bt);var im=root.querySelectorAll('.bs'),dt=root.querySelectorAll('#bdots button');if(im.length<2)return;var k=0;
-function go(n){k=(n+im.length)%im.length;im.forEach(function(x,j){x.classList.toggle('on',j===k)});dt.forEach(function(x,j){x.classList.toggle('on',j===k)})}
-dt.forEach(function(x,j){x.addEventListener('click',function(){go(j);run()})});
-function run(){clearInterval(bt);if(!(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches))bt=setInterval(function(){go(k+1)},5500)}run()}
 function wire(){m=$('svcModal');
 $('mClose').addEventListener('click',function(){m.close()});
 m.addEventListener('click',function(e){if(e.target===m)m.close()});
 m.addEventListener('close',function(){document.body.classList.remove('lock');if(last)last.focus()});
-var T=$('gT');
-$('gP').addEventListener('click',function(){T.scrollBy({left:-T.clientWidth})});
-$('gN').addEventListener('click',function(){T.scrollBy({left:T.clientWidth})});
-T.addEventListener('scroll',function(){var i=Math.round(T.scrollLeft/(T.clientWidth||1));[].forEach.call($('gD').children,function(d,j){d.classList.toggle('on',j===i)})});
 
 fb=$('fbModal');rate=0;stars=fb.querySelectorAll('.rate button');
 $('fbOpen').addEventListener('click',function(){fb.showModal();document.body.classList.add('lock')});
@@ -482,7 +428,7 @@ if(painted||!('IntersectionObserver' in window)){els.forEach(function(el){el.cla
 var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.12,rootMargin:'0px 0px -40px 0px'});
 els.forEach(function(el){io.observe(el)})}
 
-function paint(){root.classList.toggle('noanim',painted);root.innerHTML=render(data);wire();slider();reveal();updateCart();onScroll();painted=true}
+function paint(){root.classList.toggle('noanim',painted);root.innerHTML=render(data);wire();reveal();updateCart();onScroll();painted=true}
 paint();
 fetch('/api/content',{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(nd){if(nd&&nd.brand&&Array.isArray(nd.services)&&JSON.stringify(nd)!==JSON.stringify(data)){nd.reviews=nd.reviews||[];data=nd;paint()}}).catch(function(){});
 })();
